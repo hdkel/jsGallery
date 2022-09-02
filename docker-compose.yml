@@ -1,0 +1,9 @@
+version: "3"
+services:
+  web:
+    container_name: jg-web
+    image: nginx:1.17
+    volumes:
+      - ./jg:/usr/share/nginx/html
+    ports:
+      - 82:80
