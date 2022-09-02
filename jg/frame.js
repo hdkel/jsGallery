@@ -10,7 +10,7 @@ export class GalleryFrame {
 
 	populateDom(target) {
 		const dom = document.createElement('div');
-		// dom.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
+		dom.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
 		dom.classList.add('gFrame');
 		dom.control = this;
 		target.append(dom);
