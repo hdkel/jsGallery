@@ -1,10 +1,12 @@
 import { Splitter } from './splitter.js';
+import { FrameMenu } from './frame_menu.js';
 
 export class GalleryFrame {
 	constructor(args) {
 		const { target } = args;
 		this.dom = this.populateDom(target);
-		this.bindDrop();
+		this._refreshMenu();
+		this._bindDrop();
 		this.children = [];
 	}
 
@@ -17,7 +19,29 @@ export class GalleryFrame {
 		return dom;
 	}
 
-	bindDrop() {
+	_refreshMenu() {
+		if ((this.children || []).length && this._menu) {
+			this._menu.dispose();
+			this._menu = null;
+		}
+		else {
+			this._menu = new FrameMenu({
+				target: this.dom,
+				commands: [
+					{
+						action: () => { this.split('row'); },
+						icon: 'split-horizontal',
+					},
+					{
+						action: () => { this.split('column'); },
+						icon: 'split-vertical',
+					},
+				],
+			});
+		}
+	}
+
+	_bindDrop() {
 		const dom = this.dom;
 		dom.ondragenter = (ev) => { ev.preventDefault(); ev.stopPropagation();}
 		dom.ondragover = (ev) => { ev.preventDefault(); ev.stopPropagation(); }
@@ -32,6 +56,7 @@ export class GalleryFrame {
 			event.stopPropagation();
 		}.bind(this);
 	}
+
 	/**
 	 *
 	 * @param direction
@@ -48,5 +73,6 @@ export class GalleryFrame {
 		this.children.push(new GalleryFrame({
 			target: this.dom,
 		}));
+		this._refreshMenu();
 	}
 }

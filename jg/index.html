@@ -21,6 +21,28 @@
         .gResizer {
             min-width: 2px;
             min-height: 2px;
+	        background-color: #333;
+        }
+        .gMenu {
+	        visibility: hidden;
+	        position: absolute;
+	        display: flex;
+			top: 0;
+	        right: 0;
+	        background-color: rgba(127, 127, 127, 0.5);
+        }
+        .gFrame:hover>.gMenu {
+            visibility: visible;
+        }
+        .gMenuButton {
+	        cursor: pointer;
+	        width: 24px;
+	        height: 24px;
+	        line-height: 24px;
+	        text-align: center;
+        }
+        .gMenuButton:hover {
+	        background-color: #fff;
         }
 	</style>
 	<script src="script.js" type="module"></script>
