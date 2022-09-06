@@ -19,20 +19,34 @@ export class FrameMenu {
 	 */
 	_createButtons(commands) {
 		commands.forEach((command) => {
-			this._createButton(command);
+			const button = document.createElement('div');
+			button.textContent = this._decideIcon(command);
+			button.onclick = command.action;
+			button.classList.add('gMenuButton');
+			this.dom.append(button);
 		});
 	}
 
-	_createButton(command) {
-
-		const button = document.createElement('div');
-		button.textContent = '='
-		button.onclick = command.action;
-		button.classList.add('gMenuButton');
-		if (command.icon === 'split-horizontal') {
-			button.style.transform = "rotate(90deg)";
+	_decideIcon(command) {
+		let icon = '';
+		switch (command.icon) {
+			case 'split-horizontal':
+				icon = '\uD83C\uDC39';
+				break;
+			case 'split-vertical':
+				icon = '\uD83C\uDC6B';
+				break;
+			case 'remove':
+				icon = "\u2715";
+				break;
+			case 'reload':
+				icon = '\u27f3';
+				break;
+			default:
+				icon = '?';
+				break;
 		}
-		this.dom.append(button);
+		return icon;
 	}
 
 	dispose() {
