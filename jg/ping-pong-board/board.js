@@ -4,6 +4,7 @@ export class PingPongBoard {
 		const { target } = args;
 		this.populateDom(target);
 		this.bindClick();
+		this.bindKey();
 	}
 
 	populateDom(target) {
@@ -42,5 +43,17 @@ export class PingPongBoard {
 		this._fish.onclick = () => {
 			this._fishScore.innerText = String(Math.min(Number(this._fishScore.innerText) + 1, 21));
 		};
+	}
+
+	bindKey() {
+		document.body.onkeydown = (e) => {
+			console.log(e);
+			if (e.keyCode === 39) {
+				this._fishScore.innerText = String(Math.min(Number(this._fishScore.innerText) + 1, 21));
+			}
+			else if (e.keyCode === 37) {
+				this._rivalScore.innerText = String(Math.min(Number(this._rivalScore.innerText) + 1, 21));
+			}
+		}
 	}
 }
