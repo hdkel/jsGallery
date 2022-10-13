@@ -1,0 +1,42 @@
+<html lang="en">
+<head>
+	<title>Ping-pong board</title>
+	<style>
+        html, body {
+            padding: 0;
+            margin: 0;
+        }
+        #ping-pong-board {
+            display: flex;
+            height: 100%;
+        }
+        .score {
+	        flex: 1;
+	        text-align: center;
+	        display: flex;
+	        align-items: center;
+        }
+        .score-text {
+            font-size: 40vh;
+            flex: 1;
+        }
+        #rival-tag{
+            position: absolute;
+	        top: 0;
+	        left: 0;
+        }
+        #fish-tag{
+	        position: absolute;
+	        top: 0;
+	        right: 0;
+        }
+	</style>
+	<script src="script.js" type="module"></script>
+</head>
+<body>
+<div id="ping-pong-board">
+	<div id="rival-tag">rival</div>
+	<div id="fish-tag">fish</div>
+</div>
+</body>
+</html>
