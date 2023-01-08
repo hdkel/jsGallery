@@ -72,3 +72,19 @@ button {
 /*    top: 0;*/
 /*    right: 0;*/
 /*}*/
+
+/**
+ * For rune word search
+ */
+.rw-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+.rw-search-result {
+    flex: 1;
+}
+.rw-input-search {
+    flex: 0;
+    height: 2em;
+}

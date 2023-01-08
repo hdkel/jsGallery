@@ -1,5 +1,6 @@
 import { GalleryFrame } from './js-gallery/frame.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
+import { RuneWordsFilter } from "./runes/rune-words-filter.js";
 
 const app = document.getElementById('app');
 
@@ -17,6 +18,14 @@ const btnScoreBoard = document.getElementById('app-js-ping-pong-board');
 btnScoreBoard.onclick = () => {
 	emptyDom(app);
 	new PingPongBoard({
+		target: document.getElementById('app')
+	});
+}
+
+const btnRuneWords = document.getElementById('app-js-rune-words');
+btnRuneWords.onclick = () => {
+	emptyDom(app);
+	new RuneWordsFilter({
 		target: document.getElementById('app')
 	});
 }
