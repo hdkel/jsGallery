@@ -8,31 +8,28 @@ export class PingPongBoard {
 	}
 
 	populateDom(target) {
-		const rival = document.createElement('div');
-		rival.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
-		rival.classList.add('score');
-		target.append(rival);
-
-		const rivalScore = document.createElement('div');
-		rivalScore.classList.add('score-text');
-		rivalScore.append(0);
-		rival.append(rivalScore);
-
+		const [rival, rivalScore] = this._createScore();
 		this._rival = rival;
 		this._rivalScore = rivalScore;
+		target.append(this._rival);
 
-		const fish = document.createElement('div');
-		fish.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
-		fish.classList.add('score');
-		target.append(fish);
-
-		const fishScore = document.createElement('div');
-		fishScore.classList.add('score-text');
-		fishScore.append(0);
-		fish.append(fishScore);
-
+		const [fish, fishScore] = this._createScore();
 		this._fish = fish;
 		this._fishScore = fishScore;
+		target.append(this._fish);
+	}
+
+	_createScore() {
+		const Score = document.createElement('div');
+		Score.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
+		Score.classList.add('score');
+
+		const ScoreText = document.createElement('div');
+		ScoreText.classList.add('score-text');
+		ScoreText.append("0");
+		Score.append(ScoreText);
+
+		return [Score, ScoreText];
 	}
 
 	bindClick() {
@@ -47,12 +44,15 @@ export class PingPongBoard {
 
 	bindKey() {
 		document.body.onkeydown = (e) => {
-			console.log(e);
-			if (e.keyCode === 39) {
+			if (e.key === "ArrowLeft") {
+				this._rivalScore.innerText = String(Math.min(Number(this._rivalScore.innerText) + 1, 21));
+			}
+			else if (e.key === "ArrowRight") {
 				this._fishScore.innerText = String(Math.min(Number(this._fishScore.innerText) + 1, 21));
 			}
-			else if (e.keyCode === 37) {
-				this._rivalScore.innerText = String(Math.min(Number(this._rivalScore.innerText) + 1, 21));
+			else if (e.key === "Escape") {
+				this._rivalScore.innerText = "0";
+				this._fishScore.innerText = "0";
 			}
 		}
 	}
