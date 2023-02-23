@@ -56,22 +56,10 @@ button {
     text-align: center;
     display: flex;
     align-items: center;
-}
-.score-text {
+    justify-content: center;
     font-size: 40vh;
-    flex: 1;
     user-select: none;
 }
-/*#rival-tag{*/
-/*    position: absolute;*/
-/*    top: 0;*/
-/*    left: 0;*/
-/*}*/
-/*#fish-tag{*/
-/*    position: absolute;*/
-/*    top: 0;*/
-/*    right: 0;*/
-/*}*/
 
 /**
  * For rune word search
