@@ -61,6 +61,29 @@ button {
     user-select: none;
 }
 
+.round-bar {
+    display: flex;
+    flex-direction: row;
+    height: 26px;
+    padding: 15px;
+    background-color: #fff;
+    user-select: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    gap: 15px;
+}
+.round-bar-item {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background-color: #333;
+}
+
 /**
  * For rune word search
  */
