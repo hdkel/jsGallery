@@ -2,65 +2,15 @@ import { GalleryFrame } from './js-gallery/frame.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
 import { RuneWordsFilter } from "./runes/rune-words-filter.js";
 import { WormMath } from "./worm-math/math.js";
-
-/**
- * Helper method to clear all children from a DOM
- * @param {Element} element
- */
-const emptyDom = (element) => {
-	while(element.firstChild){
-		element.removeChild(element.firstChild);
-	}
-}
+import { emptyDom } from "./utility.js";
 
 const populateMenu = () => {
-	// Create the buttons
-	const btnGallery = document.createElement('button');
-	btnGallery.innerText = 'JS Gallery';
-	btnGallery.onclick = () => {
-		emptyDom(app);
-		window.history.pushState({}, 'JS Gallery', '/gallery');
-		new GalleryFrame({
-			target: document.getElementById('app')
-		});
-	};
-	app.appendChild(btnGallery);
 
-	// Creates score board button and bind event
-	const btnScoreBoard = document.createElement('button');
-	btnScoreBoard.innerText = 'Ping Pong Score Board';
-	btnScoreBoard.onclick = () => {
-		emptyDom(app);
-		window.history.pushState({}, 'Ping Pong Score Board', '/board');
-		new PingPongBoard({
-			target: document.getElementById('app')
-		});
-	}
-	app.appendChild(btnScoreBoard);
-
-	// Creates rune button and binds event
-	const btnRune = document.createElement('button');
-	btnRune.innerText = 'Rune Words';
-	btnRune.onclick = () => {
-		emptyDom(app);
-		window.history.pushState({}, 'Rune Words', '/rws');
-		new RuneWordsFilter({
-			target: document.getElementById('app')
-		});
-	}
-	app.appendChild(btnRune);
-
-	// Creates worm math button and binds event
-	const btnWormMath = document.createElement('button');
-	btnWormMath.innerText = 'Worm Math';
-	btnWormMath.onclick = () => {
-		emptyDom(app);
-		window.history.pushState({}, 'Worm Math', '/worm-math');
-		new WormMath({
-			target: document.getElementById('app')
-		});
-	}
-	app.appendChild(btnWormMath);
+	// makes buttons for each component
+	app.appendChild(GalleryFrame.makeEntry({target: app}));
+	app.appendChild(PingPongBoard.makeEntry({target: app}));
+	app.appendChild(RuneWordsFilter.makeEntry({target: app}));
+	app.appendChild(WormMath.makeEntry({target: app}));
 }
 
 const populateDom = (path) => {
@@ -80,7 +30,7 @@ const populateDom = (path) => {
 			target: document.getElementById('app')
 		});
 	}
-	else if (path === "/worm-math") {
+	else if (path === "/math") {
 		new WormMath({
 			target: document.getElementById('app')
 		});

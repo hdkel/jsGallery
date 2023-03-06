@@ -1,3 +1,5 @@
+import { emptyDom } from "../utility.js";
+
 export class PingPongBoard {
 	constructor(args) {
 		const { target } = args;
@@ -107,5 +109,21 @@ export class PingPongBoard {
 		const pickedColor = this._colors[Math.floor(Math.random() * this._colors.length)];
 		this._colors = this._colors.filter((color) => color !== pickedColor);
 		return pickedColor;
+	}
+
+	// method that makes button.
+	static makeEntry(args) {
+
+		const btnScoreBoard = document.createElement('button');
+		btnScoreBoard.innerText = 'Ping Pong Score Board';
+		btnScoreBoard.onclick = () => {
+			emptyDom(args.target);
+			window.history.pushState({}, 'Ping Pong Score Board', '/board');
+			new PingPongBoard({
+				target: args.target
+			});
+		}
+
+		return btnScoreBoard;
 	}
 }

@@ -1,5 +1,6 @@
 import { Splitter } from './splitter.js';
 import { FrameMenu } from './frame_menu.js';
+import { emptyDom } from "../utility.js";
 
 export class GalleryFrame {
 	constructor(args) {
@@ -98,8 +99,19 @@ export class GalleryFrame {
 		this._setBackground('none');
 	}
 
-	_dispose() {
-		// TODO: best way to remove?
-		this.parent.trimChild()
+	// method that makes button.
+	static makeEntry(args) {
+
+		const btnGallery = document.createElement('button');
+		btnGallery.innerText = 'JS Gallery';
+		btnGallery.onclick = () => {
+			emptyDom(args.target);
+			window.history.pushState({}, 'JS Gallery', '/gallery');
+			new GalleryFrame({
+				target: args.target
+			});
+		}
+
+		return btnGallery;
 	}
 }

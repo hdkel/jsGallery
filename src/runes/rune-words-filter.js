@@ -1,4 +1,5 @@
 import RuneWords from "./runeword-dic.js";
+import { emptyDom } from "../utility.js";
 export class RuneWordsFilter {
 
 	runes = [
@@ -78,5 +79,21 @@ export class RuneWordsFilter {
 			})
 			this.searchResult.innerHTML += `<br/>`;
 		});
+	}
+
+	// method that makes button.
+	static makeEntry(args) {
+
+		const btnRune = document.createElement('button');
+		btnRune.innerText = 'Rune Words';
+		btnRune.onclick = () => {
+			emptyDom(args.target);
+			window.history.pushState({}, 'Rune Words', '/rws');
+			new RuneWordsFilter({
+				target: args.target
+			});
+		}
+
+		return btnRune;
 	}
 }
