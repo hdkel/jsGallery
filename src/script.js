@@ -1,6 +1,7 @@
 import { GalleryFrame } from './js-gallery/frame.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
 import { RuneWordsFilter } from "./runes/rune-words-filter.js";
+import { WormMath } from "./worm-math/math.js";
 
 /**
  * Helper method to clear all children from a DOM
@@ -48,6 +49,18 @@ const populateMenu = () => {
 		});
 	}
 	app.appendChild(btnRune);
+
+	// Creates worm math button and binds event
+	const btnWormMath = document.createElement('button');
+	btnWormMath.innerText = 'Worm Math';
+	btnWormMath.onclick = () => {
+		emptyDom(app);
+		window.history.pushState({}, 'Worm Math', '/worm-math');
+		new WormMath({
+			target: document.getElementById('app')
+		});
+	}
+	app.appendChild(btnWormMath);
 }
 
 const populateDom = (path) => {
@@ -64,6 +77,11 @@ const populateDom = (path) => {
 	}
 	else if (path === "/rws") {
 		new RuneWordsFilter({
+			target: document.getElementById('app')
+		});
+	}
+	else if (path === "/worm-math") {
+		new WormMath({
 			target: document.getElementById('app')
 		});
 	}
