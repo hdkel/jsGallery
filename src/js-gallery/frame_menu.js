@@ -31,6 +31,10 @@ export class FrameMenu {
 				action: () => { frame.setBackground('none'); },
 				icon: 'reload',
 			},
+			{
+				action: () => { frame.exit(); },
+				icon: 'remove',
+			}
 		].forEach((command) => {
 			const button = document.createElement('div');
 			button.textContent = this._decideIcon(command);

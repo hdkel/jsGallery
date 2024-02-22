@@ -71,7 +71,7 @@ export class GalleryFrame {
 		this.children.push(new GalleryFrame({
 			target: dom,
 			parent: this,
-			content: dom.style.backgroundImage,
+			content: dom.style.backgroundImage, // First child gets parent content.
 		}));
 		this.children.push(new Splitter({
 			parentFrame: this,
@@ -84,6 +84,15 @@ export class GalleryFrame {
 		this._refreshMenu();
 		this.setBackground('none');
 	}
+
+	exit() {
+		if (this.parent) {
+			emptyDom(this.parent.dom);
+			this.parent._refreshMenu();
+			// TODO: parent should take content from 'the other child'
+			//this.parent.setBackground(this.dom.style.backgroundImage);
+		}
+	};
 
 	// method that makes button.
 	static makeEntry(args) {
