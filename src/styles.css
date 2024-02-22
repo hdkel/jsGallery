@@ -20,11 +20,18 @@ button {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    user-select: none;
 }
 .gResizer {
-    min-width: 2px;
-    min-height: 2px;
+    min-width: 3px;
+    min-height: 3px;
     background-color: #333;
+}
+.gResizer.gResizer-horizontal{
+    cursor: row-resize;
+}
+.gResizer.gResizer-vertical{
+    cursor: col-resize;
 }
 .gMenu {
     visibility: hidden;

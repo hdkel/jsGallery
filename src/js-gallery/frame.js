@@ -1,6 +1,6 @@
 import { Splitter } from './splitter.js';
 import { FrameMenu } from './frame_menu.js';
-import { emptyDom } from "../utility.js";
+import {emptyDom, hashCode} from "../utility.js";
 
 export class GalleryFrame {
 	constructor(args) {
@@ -9,8 +9,14 @@ export class GalleryFrame {
 		this.dom = this.populateDom(target);
 		this._refreshMenu();
 		this._bindDrop();
-		this._setBackground(content);
+		this.setBackground(content);
 		this.children = [];
+		this._setId();
+	}
+
+	_setId() {
+		this.id = hashCode(5);
+		this.dom.setAttribute('frameId', this.id);
 	}
 
 	populateDom(target) {
@@ -27,30 +33,9 @@ export class GalleryFrame {
 			this._menu = null;
 		}
 		else {
-			const commands = [
-				{
-					action: () => { this.split('row'); },
-					icon: 'split-horizontal',
-				},
-				{
-					action: () => { this.split('column'); },
-					icon: 'split-vertical',
-				},
-				{
-					action: () => { this._setBackground('none'); },
-					icon: 'reload',
-				},
-			];
-			// if (this.parent) {
-			// 	commands.push({
-			// 		action: () => { this._dispose(); },
-			// 		icon: 'remove',
-			// 	});
-			// }
 
 			this._menu = new FrameMenu({
-				target: this.dom,
-				commands,
+				frame: this,
 			});
 		}
 	}
@@ -63,7 +48,7 @@ export class GalleryFrame {
 			const pic = event.dataTransfer.files[0];
 			if (pic) {
 				const reader = new FileReader();
-				reader.onload = (ev) => this._setBackground(`url(${ev.target.result})`);
+				reader.onload = (ev) => this.setBackground(`url(${ev.target.result})`);
 				reader.readAsDataURL(pic);
 			}
 			event.preventDefault();
@@ -71,8 +56,9 @@ export class GalleryFrame {
 		}.bind(this);
 	}
 
-	_setBackground(value) {
+	setBackground(value) {
 		this.dom.style.backgroundImage = value;
+		this.dom.style.backgroundColor = Math.floor(Math.random()*16777215).toString(16);
 	}
 
 	/**
@@ -88,7 +74,7 @@ export class GalleryFrame {
 			content: dom.style.backgroundImage,
 		}));
 		this.children.push(new Splitter({
-			target: dom,
+			parentFrame: this,
 			mode: direction,
 		}))
 		this.children.push(new GalleryFrame({
@@ -96,7 +82,7 @@ export class GalleryFrame {
 			parent: this,
 		}));
 		this._refreshMenu();
-		this._setBackground('none');
+		this.setBackground('none');
 	}
 
 	// method that makes button.

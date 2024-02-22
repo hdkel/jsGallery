@@ -4,44 +4,35 @@ import { RuneWordsFilter } from "./runes/rune-words-filter.js";
 import { WormMath } from "./worm-math/math.js";
 import { emptyDom } from "./utility.js";
 
-const populateMenu = () => {
+const populateMenu = (target) => {
 
 	// makes buttons for each component
-	app.appendChild(GalleryFrame.makeEntry({target: app}));
-	app.appendChild(PingPongBoard.makeEntry({target: app}));
-	app.appendChild(RuneWordsFilter.makeEntry({target: app}));
-	app.appendChild(WormMath.makeEntry({target: app}));
+	target.appendChild(GalleryFrame.makeEntry({target: target}));
+	target.appendChild(PingPongBoard.makeEntry({target: target}));
+	target.appendChild(RuneWordsFilter.makeEntry({target: target}));
+	target.appendChild(WormMath.makeEntry({target: target}));
 }
 
-const populateDom = (path) => {
-	emptyDom(app);
-	if (path === "/board") {
-		new PingPongBoard({
-			target: document.getElementById('app')
-		});
-	}
-	else if (path === "/gallery") {
-		new GalleryFrame({
-			target: document.getElementById('app')
-		});
-	}
-	else if (path === "/rws") {
-		new RuneWordsFilter({
-			target: document.getElementById('app')
-		});
-	}
-	else if (path === "/math") {
-		new WormMath({
-			target: document.getElementById('app')
-		});
+const router = {
+	'/board': PingPongBoard,
+	'/gallery': GalleryFrame,
+	'/rws': RuneWordsFilter,
+	'/math': WormMath,
+}
+
+const populateDom = (path, target) => {
+	emptyDom(target);
+	const route = router[path];
+	if (route) {
+		new route({target: target});
 	}
 	else {
-		populateMenu();
+		populateMenu(target);
 	}
 }
 
-const app = document.getElementById('app');
-populateDom(new URL(window.location.href).pathname);
+const target = document.getElementById('app');
+populateDom(new URL(window.location.href).pathname, target);
 
 // On browser back, reset states
 window.onpopstate = () => {

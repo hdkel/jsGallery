@@ -1,8 +1,8 @@
 export class FrameMenu {
 	constructor(args) {
-		const { target, commands } = args;
-		this.dom = this.populateDom(target);
-		this._createButtons(commands);
+		const { frame } = args;
+		this.dom = this.populateDom(frame.dom);
+		this._createButtons(frame);
 	}
 
 	populateDom(target) {
@@ -14,11 +14,24 @@ export class FrameMenu {
 
 	/**
 	 *
-	 * @param {Object[]} commands
+	 * @param {GalleryFrame} frame
 	 * @private
 	 */
-	_createButtons(commands) {
-		commands.forEach((command) => {
+	_createButtons(frame) {
+		[
+			{
+				action: () => { frame.split('row'); },
+				icon: 'split-horizontal',
+			},
+			{
+				action: () => { frame.split('column'); },
+				icon: 'split-vertical',
+			},
+			{
+				action: () => { frame.setBackground('none'); },
+				icon: 'reload',
+			},
+		].forEach((command) => {
 			const button = document.createElement('div');
 			button.textContent = this._decideIcon(command);
 			button.onclick = command.action;
