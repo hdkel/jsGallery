@@ -1,5 +1,3 @@
-import { emptyDom } from "../utility.js";
-
 export class PingPongBoard {
 
 	constructor(args) {

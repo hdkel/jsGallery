@@ -1,5 +1,4 @@
 import RuneWords from "./runeword-dic.js";
-import { emptyDom } from "../utility.js";
 export class RuneWordsFilter {
 
 	runes = [
