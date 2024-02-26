@@ -85,12 +85,13 @@ export class GalleryFrame {
 		this.setBackground('none');
 	}
 
-	exit() {
+	unify(childId) {
+
+	}
+
+	removeSelf() {
 		if (this.parent) {
-			emptyDom(this.parent.dom);
-			this.parent._refreshMenu();
-			// TODO: parent should take content from 'the other child'
-			//this.parent.setBackground(this.dom.style.backgroundImage);
+			this.parent.unify(this.id);
 		}
 	};
 

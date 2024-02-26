@@ -32,7 +32,7 @@ export class FrameMenu {
 				icon: 'reload',
 			},
 			{
-				action: () => { frame.exit(); },
+				action: () => { frame.removeSelf(); },
 				icon: 'remove',
 			}
 		].forEach((command) => {
