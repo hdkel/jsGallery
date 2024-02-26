@@ -115,20 +115,4 @@ export class GalleryFrame {
 			this.dom.style.backgroundImage = null;
 		}
 	};
-
-	// method that makes button.
-	static makeEntry(args) {
-
-		const btnGallery = document.createElement('button');
-		btnGallery.innerText = 'JS Gallery';
-		btnGallery.onclick = () => {
-			emptyDom(args.target);
-			window.history.pushState({}, 'JS Gallery', '/gallery');
-			new GalleryFrame({
-				target: args.target
-			});
-		}
-
-		return btnGallery;
-	}
 }

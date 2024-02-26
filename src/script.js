@@ -1,23 +1,38 @@
 import { GalleryFrame } from './js-gallery/frame.js';
+import { Gallery } from './js-gallery-2/gallery.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
 import { RuneWordsFilter } from "./runes/rune-words-filter.js";
-import { WormMath } from "./worm-math/math.js";
 import { emptyDom } from "./utility.js";
 
-const populateMenu = (target) => {
+const populateAppMenu = () => {
 
 	// makes buttons for each component
-	target.appendChild(GalleryFrame.makeEntry({target: target}));
-	target.appendChild(PingPongBoard.makeEntry({target: target}));
-	target.appendChild(RuneWordsFilter.makeEntry({target: target}));
-	target.appendChild(WormMath.makeEntry({target: target}));
+	const appDom = document.getElementById('app');
+	populateAppMenuItem('JS Gallery', '/gallery', GalleryFrame, appDom);
+	populateAppMenuItem('JS Gallery 2', '/gallery2', Gallery, appDom);
+	populateAppMenuItem('Ping Pong Board', '/board', PingPongBoard, appDom);
+	populateAppMenuItem('Rune Words Filter', '/rws', RuneWordsFilter, appDom);
+}
+
+const populateAppMenuItem = (text, route, component, target) => {
+	const btn = document.createElement('button');
+	btn.innerText = text;
+	btn.onclick = () => {
+		const appDom = document.getElementById('app');
+		emptyDom(appDom);
+		window.history.pushState({}, text, route);
+		new component({
+			target: appDom
+		});
+	}
+	target.append(btn);
 }
 
 const router = {
 	'/board': PingPongBoard,
 	'/gallery': GalleryFrame,
+	'/gallery2': Gallery,
 	'/rws': RuneWordsFilter,
-	'/math': WormMath,
 }
 
 const populateDom = (path, target) => {
@@ -27,14 +42,14 @@ const populateDom = (path, target) => {
 		new route({target: target});
 	}
 	else {
-		populateMenu(target);
+		populateAppMenu(target);
 	}
 }
 
-const target = document.getElementById('app');
-populateDom(new URL(window.location.href).pathname, target);
+populateDom(new URL(window.location.href).pathname, document.getElementById('app'));
 
 // On browser back, reset states
 window.onpopstate = () => {
+	emptyDom(document.getElementById('app'));
 	populateDom(new URL(window.location.href).pathname);
 }
