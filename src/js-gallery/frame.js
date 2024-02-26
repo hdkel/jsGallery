@@ -62,7 +62,8 @@ export class GalleryFrame {
 	}
 
 	/**
-	 *
+	 * Splits the current frame into two.
+	 * This actually pushes 2 child frames and one splitter to children array.
 	 * @param direction
 	 */
 	split(direction = 'row') {
@@ -85,13 +86,33 @@ export class GalleryFrame {
 		this.setBackground('none');
 	}
 
+	/**
+	 * Method that 'un-split' a frame. It takes an ID representing a child frame,
+	 * after unifying, the (parent) frame takes the content of "the other child" that does NOT match the ID provided.
+	 *
+	 * This is always called by removeSelf method (bound to 'x' button) from a child frame.
+	 * TODO: this won't work when there's more than 1 nested level.
+	 * TODO: architecture is bad - we should focus on maintaining an object representing structure and leave the rest to a global rendering logic.
+	 * @param childId
+	 */
 	unify(childId) {
-
+		const otherChild = this.children.find((child) => child.id && child.id !== childId);
+		emptyDom(this.dom);
+		if (otherChild && otherChild.children) {
+			this.children = otherChild.children;
+		}
+		else {
+			this.dom.style.backgroundImage = otherChild.dom.style.backgroundImage;
+		}
+		this._refreshMenu();
 	}
 
 	removeSelf() {
 		if (this.parent) {
 			this.parent.unify(this.id);
+		}
+		else {
+			this.dom.style.backgroundImage = null;
 		}
 	};
 
