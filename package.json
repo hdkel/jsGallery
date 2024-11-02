@@ -4,7 +4,7 @@
   "description": "Gallery app that allows freely split and rearrange the viewport.",
   "main": "src/index.html",
   "scripts": {
-    "start": "live-server src --port=83 --open=src/index.html"
+    "start": "live-server src --port=83 --entry-file=src --mount=/sg:src --mount=/board:src --mount=/gallery:src --mount=/rws:src"
   },
   "author": "James Mulberry",
   "devDependencies": {
