@@ -1,0 +1,13 @@
+{
+  "name": "snap-grid-js",
+  "version": "0.0.1",
+  "description": "Gallery app that allows freely split and rearrange the viewport.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src --port=83 --open=src/index.html"
+  },
+  "author": "James Mulberry",
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  }
+}

@@ -1,9 +1,0 @@
-version: "3"
-services:
-  web:
-    container_name: jg-web
-    build : ./build/nginx
-    volumes:
-      - ./src:/usr/share/nginx/html
-    ports:
-      - "83:80"
