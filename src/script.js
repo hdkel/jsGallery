@@ -1,4 +1,3 @@
-import { GalleryFrame } from './js-gallery/frame.js';
 import { Gallery } from './snap-grid-gallery/gallery.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
 import { RuneWordsFilter } from "./runes/rune-words-filter.js";
@@ -8,7 +7,6 @@ const populateAppMenu = () => {
 
 	// makes buttons for each component
 	const appDom = document.getElementById('app');
-	populateAppMenuItem('JS Gallery', '/gallery', GalleryFrame, appDom);
 	populateAppMenuItem('Snap Grid Gallery', '/sg', Gallery, appDom);
 	populateAppMenuItem('Ping Pong Board', '/board', PingPongBoard, appDom);
 	populateAppMenuItem('Rune Words Filter', '/rws', RuneWordsFilter, appDom);
@@ -30,7 +28,6 @@ const populateAppMenuItem = (text, route, component, target) => {
 
 const router = {
 	'/board': PingPongBoard,
-	'/gallery': GalleryFrame,
 	'/sg': Gallery,
 	'/rws': RuneWordsFilter,
 }

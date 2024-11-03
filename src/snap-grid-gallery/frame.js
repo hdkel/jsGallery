@@ -6,6 +6,7 @@ export class Frame {
         this.id = args.id || hashCode();
         this.target = args.target || null;
         this.color = args.bgColor;
+        this.backgroundImage = args.backgroundImage;
         this.gallery = args.gallery;
 
         this.render();
@@ -15,10 +16,12 @@ export class Frame {
     render() {
         const dom = document.createElement('div');
         dom.style.backgroundColor = this.color;
+        dom.style.backgroundImage = this.backgroundImage;
         dom.classList.add('gFrame');
 
         new FrameMenu({ target: dom, frame: this });
         this.dom = dom;
+        this.dom.class = this;
         this.target.append(dom);
     }
 
@@ -40,6 +43,7 @@ export class Frame {
 
     setBackground(value) {
         this.dom.style.backgroundImage = value;
+        this.gallery.updateProperties(this.id, { backgroundImage: value });
     };
 
     split(direction = 'row') {

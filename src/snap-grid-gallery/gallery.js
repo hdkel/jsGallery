@@ -11,6 +11,7 @@ export class Gallery {
         this._layout = [];
         this._frames = [];
         this._startDirection = "row";
+
         this._initFrameData();
         this._recursiveRender(this._layout, this._target, this._startDirection);
     }
@@ -21,7 +22,7 @@ export class Gallery {
         window.sg.layout = this._layout;
         window.sg.frames = this._frames;
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 1; i++) {
             const id = hashCode(4);
             const frame = {
                 id,
@@ -30,18 +31,6 @@ export class Gallery {
             this._layout.push(id);
             this._frames[id] = frame;
         }
-
-        const ct = [];
-        for (let i = 0; i < 2; i++) {
-            const id = hashCode(4);
-            const frame = {
-                id,
-                bgColor: Frame.pickColor(),
-            };
-            ct.push(id);
-            this._frames[id] = frame;
-        }
-        this._layout.push(ct);
     }
 
     _recursiveRender(layoutElements, target, mode) {
@@ -65,15 +54,21 @@ export class Gallery {
                 // When it's an object(array), draw container
                 else if (typeof element === "object") {
                     // Nested containers always have different mode (direction), otherwise they can be in same parent
-                    const newDirection = this.flipDirection(mode);
+                    const newDirection = this._flipDirection(mode);
                     this._recursiveRender(element, container, newDirection);
                 }
             });
         }
     }
 
-    flipDirection(direction) {
-        return direction === 'row' ? 'column' : 'row';
+    _flipDirection(direction) {
+        return {'row': 'column', 'column': 'row',}[direction];
+    }
+
+    updateProperties(id, properties) {
+
+        const frame = this._frames[id];
+        Object.assign(frame, properties);
     }
 
     split(id, direction) {
@@ -103,7 +98,7 @@ export class Gallery {
         for (let i = 0; i < layoutElements.length; i++) {
             let layoutElement = layoutElements[i];
             if (typeof layoutElement === "object") {
-                const found = this.findLayoutParentByFrameId(layoutElement, id, this.flipDirection(direction));
+                const found = this.findLayoutParentByFrameId(layoutElement, id, this._flipDirection(direction));
                 if (found) { return found; }
             }
             else if (layoutElement === id) {

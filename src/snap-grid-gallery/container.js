@@ -1,16 +1,19 @@
 export class Container {
+
     constructor(args) {
         const { target, mode } = args;
-        this.dom = this.populateDom(target, mode);
-        return this.dom;
+
+        this.domElement = this.createDomElement(mode);
+        this.domElement.class = this;
+        target.append(this.domElement);
+
+        return this.domElement;
     }
 
-    populateDom(target, mode) {
+    createDomElement(mode) {
         const dom = document.createElement('div');
         dom.classList.add('gContainer');
-        dom.classList.add(mode === 'row' ? 'gContainer-horizontal' : 'gContainer-vertical');
-        dom.control = this;
-        target.append(dom);
+        dom.classList.add({'row': 'gContainer-horizontal', 'column': 'gContainer-vertical'}[mode] || 'gContainer-horizontal');
         return dom;
     }
 }
