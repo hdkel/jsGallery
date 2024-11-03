@@ -55,7 +55,19 @@ button {
     right: 0;
     background-color: rgba(127, 127, 127, 0.5);
 }
-.gFrame:hover>.gMenu {
+.gMenu2 {
+    visibility: hidden;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    top: 0;
+    right: 0;
+    left: 0;
+    background-color: rgba(127, 127, 127, 0.5);
+}
+.gFrame:hover>.gMenu,
+.gFrame:hover>.gMenu2 {
     visibility: visible;
 }
 .gMenuButton {
