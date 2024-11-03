@@ -22,16 +22,30 @@ button {
     background-position: center;
     user-select: none;
 }
+.gContainer {
+    position: relative;
+    display: flex;
+    flex: 1;
+    user-select: none;
+}
+.gContainer.gContainer-horizontal{
+    flex-direction: row;
+}
+.gContainer.gContainer-vertical{
+    flex-direction: column;
+}
 .gResizer {
-    min-width: 3px;
-    min-height: 3px;
-    background-color: #333;
+    min-width: 5px;
+    min-height: 5px;
+    background-color: #999;
 }
-.gResizer.gResizer-horizontal{
-    cursor: row-resize;
-}
-.gResizer.gResizer-vertical{
+.gResizer.gResizer-vertical,
+.gResizer.gResizer-alongHorizontal{
     cursor: col-resize;
+}
+.gResizer.gResizer-horizontal,
+.gResizer.gResizer-alongVertical{
+    cursor: row-resize;
 }
 .gMenu {
     visibility: hidden;
