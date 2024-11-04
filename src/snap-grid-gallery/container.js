@@ -1,19 +1,26 @@
 export class Container {
 
+    static mapDirectionToCss = {'row': 'gContainer-horizontal', 'column': 'gContainer-vertical'};
+    static directionToCss = direction => Container.mapDirectionToCss[direction] || 'gContainer-horizontal';
+
     constructor(args) {
-        const { target, mode } = args;
 
-        this.domElement = this.createDomElement(mode);
-        this.domElement.class = this;
-        target.append(this.domElement);
+        // Extract
+        const { target, layoutDirection } = args;
 
-        return this.domElement;
+        // Create DOM element
+        this._domElement = this._createDomElement(layoutDirection);
+        this._domElement.class = this;
+        target.append(this._domElement);
+
+        // Return for outside world
+        return this._domElement;
     }
 
-    createDomElement(mode) {
+    _createDomElement(layoutDirection) {
         const dom = document.createElement('div');
         dom.classList.add('gContainer');
-        dom.classList.add({'row': 'gContainer-horizontal', 'column': 'gContainer-vertical'}[mode] || 'gContainer-horizontal');
+        dom.classList.add(Container.directionToCss(layoutDirection));
         return dom;
     }
 }

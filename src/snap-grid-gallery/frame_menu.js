@@ -1,69 +1,67 @@
 export class FrameMenu {
+
+	static mapIcon = {
+		'split-horizontal': '\uD83C\uDC39',
+		'split-vertical': '\uD83C\uDC6B',
+		'remove': '\u2715',
+		'reload': '\u27f3',
+	};
+	static commandToIcon = icon => FrameMenu.mapIcon[icon] || '?';
+
 	constructor(args) {
+
+		// Extract and set ref.
 		const { target, frame } = args;
-		this.frame = frame;
-		this.dom = this.populateDom(target);
-		this._createButtons();
+		this._frame = frame;
+
+		// Makes DOM element.
+		this._domElement = this._createDomElement(target);
+		this._domElement.class = this;
+		target.append(this._domElement);
+
+		// and buttons
+		this._appendButtons();
 	}
 
-	populateDom(target) {
+	_createDomElement() {
 		const menu = document.createElement('div');
 		menu.classList.add('gMenu2');
-		target.append(menu);
 		return menu;
 	}
 
-	_createButtons() {
+	_appendButtons() {
 		[
 			{
-				action: () => { this.frame.split('row'); },
+				action: () => { this._frame.split('row'); },
 				icon: 'split-horizontal',
 			},
 			{
-				action: () => { this.frame.split('column'); },
+				action: () => { this._frame.split('column'); },
 				icon: 'split-vertical',
 			},
 			{
-				action: () => { this.frame.setBackground('none'); },
+				action: () => { this._frame.setBackground('none'); },
 				icon: 'reload',
 			},
 			{
-				action: () => { this.frame.removeSelf(); },
+				action: () => { this._frame.removeSelf(); },
 				icon: 'remove',
 			}
 		].forEach((command) => {
-			const button = document.createElement('div');
-			button.textContent = this._decideIcon(command);
-			button.onclick = command.action;
-			button.classList.add('gMenuButton');
-			this.dom.append(button);
+			this._domElement.append(this._createButton(command));
 		});
 	}
 
-	_decideIcon(command) {
-		let icon = '';
-		switch (command.icon) {
-			case 'split-horizontal':
-				icon = '\uD83C\uDC39';
-				break;
-			case 'split-vertical':
-				icon = '\uD83C\uDC6B';
-				break;
-			case 'remove':
-				icon = "\u2715";
-				break;
-			case 'reload':
-				icon = '\u27f3';
-				break;
-			default:
-				icon = '?';
-				break;
-		}
-		return icon;
+	_createButton(command) {
+		const button = document.createElement('div');
+		button.textContent = FrameMenu.commandToIcon(command.icon);
+		button.onclick = command.action;
+		button.classList.add('gMenuButton');
+		return button;
 	}
 
 	dispose() {
-		this.dom.remove();
-		return this.dom;
+		this._domElement.remove();
+		return this._domElement;
 	}
 }

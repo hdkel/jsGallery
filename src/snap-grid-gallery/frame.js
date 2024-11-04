@@ -1,32 +1,38 @@
-import {hashCode} from "../utility.js";
 import {FrameMenu} from "./frame_menu.js";
 
 export class Frame {
-    constructor(args) {
-        this.id = args.id || hashCode();
-        this.target = args.target || null;
-        this.color = args.bgColor;
-        this.backgroundImage = args.backgroundImage;
-        this.gallery = args.gallery;
 
-        this.render();
+    static pickColor = () => Math.floor(Math.random()*16777215).toString(16);
+
+    constructor(args) {
+
+        // Extract and set ref.
+        const { id, target, bgColor, backgroundImage, gallery } = args;
+        this._id = id;
+        this._color = bgColor;
+        this._backgroundImage = backgroundImage;
+        this._gallery = gallery;
+
+        // Makes DOM element
+        this._domElement = this._createDomElement();
+        this._domElement.class = this;
+        target.append(this._domElement);
+
+        new FrameMenu({ target: this._domElement, frame: this });
+
         this._bindDrop();
     }
 
-    render() {
+    _createDomElement() {
         const dom = document.createElement('div');
-        dom.style.backgroundColor = this.color;
-        dom.style.backgroundImage = this.backgroundImage;
+        dom.style.backgroundColor = this._color;
+        dom.style.backgroundImage = this._backgroundImage;
         dom.classList.add('gFrame');
-
-        new FrameMenu({ target: dom, frame: this });
-        this.dom = dom;
-        this.dom.class = this;
-        this.target.append(dom);
+        return dom;
     }
 
     _bindDrop() {
-        const dom = this.dom;
+        const dom = this._domElement;
         dom.ondragenter = (ev) => { ev.preventDefault(); ev.stopPropagation();}
         dom.ondragover = (ev) => { ev.preventDefault(); ev.stopPropagation(); }
         dom.ondrop = function(event) {
@@ -42,15 +48,11 @@ export class Frame {
     }
 
     setBackground(value) {
-        this.dom.style.backgroundImage = value;
-        this.gallery.updateProperties(this.id, { backgroundImage: value });
+        this._domElement.style.backgroundImage = value;
+        this._gallery.updateProperties(this._id, { backgroundImage: value });
     };
 
     split(direction = 'row') {
-        this.gallery.split(this.id, direction);
-    }
-
-    static pickColor() {
-        return Math.floor(Math.random()*16777215).toString(16);
+        this._gallery.split(this._id, direction);
     }
 }

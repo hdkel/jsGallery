@@ -5,44 +5,52 @@ import {Container} from "./container.js";
 
 export class Gallery {
 
+    static initialDirection = "row";
+    static layoutToggle = {'row': 'column', 'column': 'row'};
+    static flipDirection = direction => Gallery.layoutToggle[direction];
+
     constructor(args) {
+
+        // Extract
         const { target } = args;
         this._target = target;
+
+        // Initialize
         this._layout = [];
         this._frames = [];
-        this._startDirection = "row";
 
-        this._initFrameData();
-        this._recursiveRender(this._layout, this._target, this._startDirection);
-    }
-
-    _initFrameData() {
-
+        // For debugging purpose, consider making optional.
         window.sg = {};
         window.sg.layout = this._layout;
         window.sg.frames = this._frames;
 
-        for (let i = 0; i < 1; i++) {
-            const id = hashCode(4);
-            const frame = {
-                id,
-                bgColor: Frame.pickColor(),
-            };
-            this._layout.push(id);
-            this._frames[id] = frame;
+        // Prepare the initial frame
+        const initFrame = this._makeFrame();
+        this._layout.push(initFrame.id);
+        this._frames[initFrame.id] = initFrame;
+
+        // Render
+        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
+    }
+
+    _makeFrame() {
+        return {
+            id:  hashCode(4),
+            bgColor: Frame.pickColor(),
         }
     }
 
     _recursiveRender(layoutElements, target, mode) {
 
-        if (typeof layoutElements === "object") {
+        // If element is an object (array in this case)
+        if (Array.isArray(layoutElements)) {
 
-            const container = new Container({target, mode});
+            const container = new Container({target, layoutDirection: mode});
             layoutElements.forEach((element, index) => {
 
                 // Not the first item, meaning we need splitter
                 if (index !== 0) {
-                    new Splitter({ target: container, mode});
+                    new Splitter({ target: container, layoutDirection: mode});
                 }
 
                 // A specific ID, draw frame
@@ -52,58 +60,52 @@ export class Gallery {
                 }
 
                 // When it's an object(array), draw container
-                else if (typeof element === "object") {
+                else if (Array.isArray(element)) {
                     // Nested containers always have different mode (direction), otherwise they can be in same parent
-                    const newDirection = this._flipDirection(mode);
+                    const newDirection = Gallery.flipDirection(mode);
                     this._recursiveRender(element, container, newDirection);
                 }
             });
         }
     }
 
-    _flipDirection(direction) {
-        return {'row': 'column', 'column': 'row',}[direction];
-    }
-
-    updateProperties(id, properties) {
-
-        const frame = this._frames[id];
-        Object.assign(frame, properties);
-    }
-
-    split(id, direction) {
-        const [layoutElementParent, existingDirection] = this.findLayoutParentByFrameId(this._layout, id, this._startDirection);
-
-        // Make the new frame and decide how to append later.
-        const idNew = hashCode(4);
-        this._frames[idNew] = {
-            id: idNew,
-            bgColor: Frame.pickColor(),
-        };
-
-        if (direction === existingDirection) {
-            layoutElementParent.splice(layoutElementParent.indexOf(id) + 1, 0, idNew);
-        }
-        else {
-            layoutElementParent.splice(layoutElementParent.indexOf(id), 1, [id, idNew]);
-        }
-
-        // Adjustment of layout is done, let's re-render
-        emptyDom(this._target);
-        this._recursiveRender(this._layout, this._target, "row");
-    }
-
-    findLayoutParentByFrameId(layoutElements, id, direction) {
-
+    _findLayoutParentByFrameId(layoutElements, id, direction) {
         for (let i = 0; i < layoutElements.length; i++) {
             let layoutElement = layoutElements[i];
-            if (typeof layoutElement === "object") {
-                const found = this.findLayoutParentByFrameId(layoutElement, id, this._flipDirection(direction));
+
+            if (Array.isArray(layoutElement)) {
+                const found = this._findLayoutParentByFrameId(layoutElement, id, Gallery.flipDirection(direction));
                 if (found) { return found; }
             }
             else if (layoutElement === id) {
                 return [layoutElements, direction];
             }
         }
+    }
+
+    updateProperties(id, properties) {
+        const frame = this._frames[id];
+        Object.assign(frame, properties);
+    }
+
+    split(id, direction) {
+        const [layoutElementParent, existingDirection] = this._findLayoutParentByFrameId(this._layout, id, Gallery.initialDirection);
+
+        // Make the new frame and decide how to append later.
+        const newFrame = this._makeFrame();
+        this._frames[newFrame.id] = newFrame;
+
+        if (direction === existingDirection) {
+            // Same direction, just add to array
+            layoutElementParent.splice(layoutElementParent.indexOf(id) + 1, 0, newFrame.id);
+        }
+        else {
+            // Different direction, replace id with an array which contains the id.
+            layoutElementParent.splice(layoutElementParent.indexOf(id), 1, [id, newFrame.id]);
+        }
+
+        // Layout adjustment is done, let's re-render
+        emptyDom(this._target);
+        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
     }
 }
