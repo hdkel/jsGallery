@@ -26,7 +26,10 @@ export class Gallery {
 
         // Prepare the initial frame
         const initFrame = this._makeFrame();
-        this._layout.push(initFrame.id);
+        this._layout = {
+            direction: Gallery.initialDirection,
+            children: [initFrame.id],
+        }
         this._frames[initFrame.id] = initFrame;
 
         // Render
@@ -40,33 +43,30 @@ export class Gallery {
         }
     }
 
-    _recursiveRender(layoutElements, target, mode) {
+    _recursiveRender(layoutElement, target) {
 
-        // If element is an object (array in this case)
-        if (Array.isArray(layoutElements)) {
+        const layoutDirection = layoutElement.direction;
 
-            const container = new Container({target, layoutDirection: mode});
-            layoutElements.forEach((element, index) => {
+        const container = new Container({target, layoutDirection});
+        layoutElement.children.forEach((child, index) => {
 
-                // Not the first item, meaning we need splitter
-                if (index !== 0) {
-                    new Splitter({ target: container, layoutDirection: mode});
-                }
+            // Not the first item, meaning we need splitter
+            if (index !== 0) {
+                new Splitter({ target: container, layoutDirection});
+            }
 
-                // A specific ID, draw frame
-                if (typeof element === "string") {
-                    const frame = this._frames[element];
-                    new Frame({ target: container, gallery: this, ...frame});
-                }
+            // A specific ID, draw frame
+            if (typeof child === "string") {
+                const frame = this._frames[child];
+                new Frame({ target: container, gallery: this, ...frame});
+            }
 
-                // When it's an object(array), draw container
-                else if (Array.isArray(element)) {
-                    // Nested containers always have different mode (direction), otherwise they can be in same parent
-                    const newDirection = Gallery.flipDirection(mode);
-                    this._recursiveRender(element, container, newDirection);
-                }
-            });
-        }
+            // When it's an object, do recursive render
+            else if (typeof child === "object") {
+                this._recursiveRender(child, container, child.layoutDirection);
+            }
+        });
+
     }
 
     _findLayoutParentByFrameId(layoutElements, id, direction) {
@@ -105,6 +105,15 @@ export class Gallery {
         }
 
         // Layout adjustment is done, let's re-render
+        emptyDom(this._target);
+        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
+    }
+
+    removeFrame(id) {
+
+        // think about how to deal with this.
+
+        delete this._frames[id];
         emptyDom(this._target);
         this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
     }

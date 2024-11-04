@@ -4,8 +4,6 @@ export class Splitter {
 	static directionToCss = direction => Splitter.mapDirectionToCss[direction] || 'gResizer-alongVertical';
 
 	constructor(args) {
-
-		// Extract
 		const { target, layoutDirection } = args;
 
 		// Create DOM element

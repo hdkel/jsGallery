@@ -9,8 +9,6 @@ export class FrameMenu {
 	static commandToIcon = icon => FrameMenu.mapIcon[icon] || '?';
 
 	constructor(args) {
-
-		// Extract and set ref.
 		const { target, frame } = args;
 		this._frame = frame;
 

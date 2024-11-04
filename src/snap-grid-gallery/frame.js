@@ -5,8 +5,6 @@ export class Frame {
     static pickColor = () => Math.floor(Math.random()*16777215).toString(16);
 
     constructor(args) {
-
-        // Extract and set ref.
         const { id, target, bgColor, backgroundImage, gallery } = args;
         this._id = id;
         this._color = bgColor;
@@ -17,7 +15,6 @@ export class Frame {
         this._domElement = this._createDomElement();
         this._domElement.class = this;
         target.append(this._domElement);
-
         new FrameMenu({ target: this._domElement, frame: this });
 
         this._bindDrop();
@@ -54,5 +51,9 @@ export class Frame {
 
     split(direction = 'row') {
         this._gallery.split(this._id, direction);
+    }
+
+    removeSelf() {
+        this._gallery.removeFrame(this._id);
     }
 }
