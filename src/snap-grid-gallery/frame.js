@@ -5,15 +5,19 @@ export class Frame {
     static pickColor = () => Math.floor(Math.random()*16777215).toString(16);
 
     constructor(args) {
-        const { id, target, bgColor, backgroundImage, gallery } = args;
-        this._id = id;
-        this._color = bgColor;
-        this._backgroundImage = backgroundImage;
+        const { target, gallery, node } = args;
         this._gallery = gallery;
+        this._node = node;
+
+        this._frame = this._gallery.getFrameById(node.id);
+        this._id = this._frame.id;
+        this._color = this._frame.bgColor;
+        this._backgroundImage = this._frame.backgroundImage;
 
         // Makes DOM element
         this._domElement = this._createDomElement();
         this._domElement.class = this;
+        node.dom = this._domElement;
         target.append(this._domElement);
         new FrameMenu({ target: this._domElement, frame: this });
 
@@ -50,7 +54,7 @@ export class Frame {
     };
 
     split(direction = 'row') {
-        this._gallery.split(this._id, direction);
+        this._gallery.split(this._node, direction);
     }
 
     removeSelf() {

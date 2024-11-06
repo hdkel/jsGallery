@@ -1,13 +1,10 @@
 import {emptyDom, hashCode} from "../utility.js";
 import {Frame} from "./frame.js";
-import {Splitter} from "./splitter.js";
 import {Container} from "./container.js";
 
 export class Gallery {
 
     static initialDirection = "row";
-    static layoutToggle = {'row': 'column', 'column': 'row'};
-    static flipDirection = direction => Gallery.layoutToggle[direction];
 
     constructor(args) {
 
@@ -16,7 +13,7 @@ export class Gallery {
         this._target = target;
 
         // Initialize
-        this._layout = [];
+        this._layout = {};
         this._frames = [];
 
         // For debugging purpose, consider making optional.
@@ -26,14 +23,23 @@ export class Gallery {
 
         // Prepare the initial frame
         const initFrame = this._makeFrame();
-        this._layout = {
-            direction: Gallery.initialDirection,
-            children: [initFrame.id],
-        }
         this._frames[initFrame.id] = initFrame;
+        this._layout = this._makeNodeContainer(Gallery.initialDirection, [this._makeNodeFrame(initFrame.id)]);
 
         // Render
-        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
+        this._render(this._layout, this._target, Gallery.initialDirection);
+    }
+
+    getFrameById(id) {
+        return this._frames[id];
+    }
+
+    _makeNodeContainer(direction, nodes) {
+        return { type: 'container', direction, nodes }
+    }
+
+    _makeNodeFrame(id) {
+        return { type: 'frame', id }
     }
 
     _makeFrame() {
@@ -43,42 +49,24 @@ export class Gallery {
         }
     }
 
-    _recursiveRender(layoutElement, target) {
-
-        const layoutDirection = layoutElement.direction;
-
-        const container = new Container({target, layoutDirection});
-        layoutElement.children.forEach((child, index) => {
-
-            // Not the first item, meaning we need splitter
-            if (index !== 0) {
-                new Splitter({ target: container, layoutDirection});
-            }
-
-            // A specific ID, draw frame
-            if (typeof child === "string") {
-                const frame = this._frames[child];
-                new Frame({ target: container, gallery: this, ...frame});
-            }
-
-            // When it's an object, do recursive render
-            else if (typeof child === "object") {
-                this._recursiveRender(child, container, child.layoutDirection);
-            }
-        });
-
+    // This method, and all subcomponents, only deals with UI update.
+    // ABSOLUTELY NO data manipulation on this._layout or this._frames is allowed from inside.
+    _render(layout, target) {
+        console.log(this._layout);
+        emptyDom(this._target);
+        new Container({target, gallery: this, layout});
     }
 
-    _findLayoutParentByFrameId(layoutElements, id, direction) {
-        for (let i = 0; i < layoutElements.length; i++) {
-            let layoutElement = layoutElements[i];
+    _findLayoutParentByFrameId(layoutElement, id) {
+        for (let i = 0; i < layoutElement.nodes.length; i++) {
+            let child = layoutElement.nodes[i];
 
-            if (Array.isArray(layoutElement)) {
-                const found = this._findLayoutParentByFrameId(layoutElement, id, Gallery.flipDirection(direction));
+            if (child.type === 'container') {
+                const found = this._findLayoutParentByFrameId(child, id, layoutElement.direction);
                 if (found) { return found; }
             }
-            else if (layoutElement === id) {
-                return [layoutElements, direction];
+            else if (child.type === 'frame' && child.id === id) {
+                return layoutElement;
             }
         }
     }
@@ -88,33 +76,34 @@ export class Gallery {
         Object.assign(frame, properties);
     }
 
-    split(id, direction) {
-        const [layoutElementParent, existingDirection] = this._findLayoutParentByFrameId(this._layout, id, Gallery.initialDirection);
+    split(child, splitDirection) {
+        const layoutElementParent = this._findLayoutParentByFrameId(this._layout, child.id);
 
         // Make the new frame and decide how to append later.
         const newFrame = this._makeFrame();
         this._frames[newFrame.id] = newFrame;
 
-        if (direction === existingDirection) {
+        if (splitDirection === layoutElementParent.direction) {
             // Same direction, just add to array
-            layoutElementParent.splice(layoutElementParent.indexOf(id) + 1, 0, newFrame.id);
+            const index = layoutElementParent.nodes.indexOf(child) + 1;
+            layoutElementParent.nodes.splice(index, 0, this._makeNodeFrame(newFrame.id));
         }
         else {
-            // Different direction, replace id with an array which contains the id.
-            layoutElementParent.splice(layoutElementParent.indexOf(id), 1, [id, newFrame.id]);
+            // Different direction, replace id with a new frame object with two ids as nodes.
+            const index = layoutElementParent.nodes.indexOf(child);
+            const newChildNodes = [this._makeNodeFrame(child.id), this._makeNodeFrame(newFrame.id)];
+            const newContainer = this._makeNodeContainer(splitDirection, newChildNodes);
+            layoutElementParent.nodes.splice(index, 1, newContainer);
         }
 
         // Layout adjustment is done, let's re-render
-        emptyDom(this._target);
-        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
+        this._render(this._layout, this._target);
     }
 
     removeFrame(id) {
 
         // think about how to deal with this.
-
         delete this._frames[id];
-        emptyDom(this._target);
-        this._recursiveRender(this._layout, this._target, Gallery.initialDirection);
+        this._render(this._layout, this._target);
     }
 }
