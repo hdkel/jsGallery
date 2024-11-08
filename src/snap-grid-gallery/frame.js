@@ -50,7 +50,7 @@ export class Frame {
 
     setBackground(value) {
         this._domElement.style.backgroundImage = value;
-        this._gallery.updateProperties(this._id, { backgroundImage: value });
+        this._gallery.updateFrameProperties(this._id, { backgroundImage: value });
     };
 
     split(direction = 'row') {

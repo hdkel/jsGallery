@@ -71,7 +71,7 @@ export class Gallery {
         }
     }
 
-    updateProperties(id, properties) {
+    updateFrameProperties(id, properties) {
         const frame = this._frames[id];
         Object.assign(frame, properties);
     }
@@ -102,7 +102,28 @@ export class Gallery {
 
     removeFrame(id) {
 
-        // think about how to deal with this.
+        const layoutElementParent = this._findLayoutParentByFrameId(this._layout, id);
+
+        const frameElement = layoutElementParent.nodes.find(node => node.id === id);
+        const index = layoutElementParent.nodes.indexOf(frameElement);
+        layoutElementParent.nodes.splice(index, 1);
+
+        if (layoutElementParent.nodes.length === 1) {
+            const remainingNode = layoutElementParent.nodes[0];
+
+            if (remainingNode.type === 'frame') {
+                layoutElementParent.type = 'frame';
+                layoutElementParent.id = remainingNode.id;
+                delete layoutElementParent.nodes;
+                delete layoutElementParent.direction;
+            }
+            else if (remainingNode.type === 'container') {
+                layoutElementParent.direction = remainingNode.direction;
+                layoutElementParent.nodes = remainingNode.nodes;
+                // todo: this is not enough, youcould have [1, [2,3]] 3 columns in same container
+            }
+        }
+
         delete this._frames[id];
         this._render(this._layout, this._target);
     }
