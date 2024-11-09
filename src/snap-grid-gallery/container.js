@@ -5,6 +5,7 @@ export class Container {
 
     static mapDirectionToCss = {'row': 'gContainer-horizontal', 'column': 'gContainer-vertical'};
     static directionToCss = direction => Container.mapDirectionToCss[direction] || 'gContainer-horizontal';
+    static generateLayoutNode = (direction, nodes) => ({ type: 'container', direction, nodes });
 
     constructor(args) {
 
@@ -42,7 +43,7 @@ export class Container {
 
             switch (node.type) {
                 case 'frame':
-                    new Frame({ target: this._domElement, gallery: this._gallery, node });
+                    new Frame({ target: this._domElement, gallery: this._gallery, node, canRemove: this._layout.nodes.length > 1 });
                     break;
                 case 'container':
                     new Container({target: this._domElement, gallery: this._gallery, layout: node });

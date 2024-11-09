@@ -1,4 +1,4 @@
-import {emptyDom, hashCode} from "../utility.js";
+import {emptyDom} from "../utility.js";
 import {Frame} from "./frame.js";
 import {Container} from "./container.js";
 
@@ -14,85 +14,132 @@ export class Gallery {
 
         // Initialize
         this._layout = {};
-        this._frames = [];
+        this._framesNodes = [];
 
         // For debugging purpose, consider making optional.
         window.sg = {};
         window.sg.layout = this._layout;
-        window.sg.frames = this._frames;
+        window.sg.frames = this._framesNodes;
 
         // Prepare the initial frame
-        const initFrame = this._makeFrame();
-        this._frames[initFrame.id] = initFrame;
-        this._layout = this._makeNodeContainer(Gallery.initialDirection, [this._makeNodeFrame(initFrame.id)]);
+        const initNode = Frame.generatePropertyNode();
+        this._framesNodes[initNode.id] = initNode;
+        this._layout = Frame.generateLayoutNode(initNode.id);
 
         // Render
         this._render(this._layout, this._target, Gallery.initialDirection);
     }
 
     getFrameById(id) {
-        return this._frames[id];
+        return this._framesNodes[id];
     }
 
-    _makeNodeContainer(direction, nodes) {
-        return { type: 'container', direction, nodes }
-    }
+    _organizeLayout(layoutNode) {
 
-    _makeNodeFrame(id) {
-        return { type: 'frame', id }
-    }
+        let hasChange = false;
+        if (layoutNode.type === 'container') {
 
-    _makeFrame() {
-        return {
-            id:  hashCode(4),
-            bgColor: Frame.pickColor(),
+            // Container with only one container as child, should flatten
+            if (layoutNode.nodes.length === 1) {
+
+                if (layoutNode.nodes[0].type === 'container') {
+                    const childNode = layoutNode.nodes[0];
+                    layoutNode.direction = childNode.direction;
+                    layoutNode.nodes = childNode.nodes;
+                    hasChange = true;
+                }
+                else if (layoutNode.nodes[0].type === 'frame') {
+                    layoutNode.type = 'frame';
+                    layoutNode.id = layoutNode.nodes[0].id;
+                    delete layoutNode.dom;
+                    delete layoutNode.nodes;
+                    delete layoutNode.direction;
+                    hasChange = true;
+                }
+            }
+
+            // Container with multiple children, do recursive
+            else if (layoutNode.nodes.length > 1){
+                for (let i = 0; i < layoutNode.nodes.length; i++) {
+                    let childNode = layoutNode.nodes[i];
+                    if (childNode.type === 'container') {
+                        this._organizeLayout(childNode);
+                    }
+                }
+            }
+        }
+
+        // Has data change, we need to rerun this.
+        if (hasChange) {
+            this._organizeLayout(layoutNode);
+        }
+
+        // No data change at this layer, do one more loop so frames with same direction at this level are not nested.
+        else if (layoutNode.type === 'container') {
+            for (let i = 0; i < layoutNode.nodes.length; i++) {
+                let childNode = layoutNode.nodes[i];
+                if (childNode.type === 'container' && childNode.direction === layoutNode.direction) {
+                    layoutNode.nodes.splice(i, 1, ...childNode.nodes);
+                }
+            }
         }
     }
 
     // This method, and all subcomponents, only deals with UI update.
-    // ABSOLUTELY NO data manipulation on this._layout or this._frames is allowed from inside.
+    // ABSOLUTELY NO data manipulation on this._layout or this._framesNodes is allowed from inside.
     _render(layout, target) {
         console.log(this._layout);
         emptyDom(this._target);
-        new Container({target, gallery: this, layout});
+        if (layout.type === 'container') {
+            new Container({target, gallery: this, layout});
+        }
+        else if (layout.type === 'frame') {
+            new Frame({ target, gallery: this, node: layout, canRemove: false });
+        }
     }
 
-    _findLayoutParentByFrameId(layoutElement, id) {
-        for (let i = 0; i < layoutElement.nodes.length; i++) {
-            let child = layoutElement.nodes[i];
+    _findParentContainerNodeByFrameId(layoutNode, id) {
+        if (layoutNode.type === 'container') {
+            for (let i = 0; i < layoutNode.nodes.length; i++) {
+                let childNode = layoutNode.nodes[i];
 
-            if (child.type === 'container') {
-                const found = this._findLayoutParentByFrameId(child, id, layoutElement.direction);
-                if (found) { return found; }
-            }
-            else if (child.type === 'frame' && child.id === id) {
-                return layoutElement;
+                if (childNode.type === 'container') {
+                    const found = this._findParentContainerNodeByFrameId(childNode, id, layoutNode.direction);
+                    if (found) { return found; }
+                }
+                else if (childNode.type === 'frame' && childNode.id === id) {
+                    return layoutNode;
+                }
             }
         }
     }
 
     updateFrameProperties(id, properties) {
-        const frame = this._frames[id];
+        const frame = this._framesNodes[id];
         Object.assign(frame, properties);
     }
 
     split(child, splitDirection) {
-        const layoutElementParent = this._findLayoutParentByFrameId(this._layout, child.id);
+        let layoutElementParent = this._findParentContainerNodeByFrameId(this._layout, child.id);
+        if (!layoutElementParent) {
+            layoutElementParent = Container.generateLayoutNode(splitDirection, [Frame.generateLayoutNode(child.id)]);
+            this._layout = layoutElementParent;
+        }
 
         // Make the new frame and decide how to append later.
-        const newFrame = this._makeFrame();
-        this._frames[newFrame.id] = newFrame;
+        const newFrame = Frame.generatePropertyNode();
+        this._framesNodes[newFrame.id] = newFrame;
 
         if (splitDirection === layoutElementParent.direction) {
             // Same direction, just add to array
             const index = layoutElementParent.nodes.indexOf(child) + 1;
-            layoutElementParent.nodes.splice(index, 0, this._makeNodeFrame(newFrame.id));
+            layoutElementParent.nodes.splice(index, 0, Frame.generateLayoutNode(newFrame.id));
         }
         else {
             // Different direction, replace id with a new frame object with two ids as nodes.
             const index = layoutElementParent.nodes.indexOf(child);
-            const newChildNodes = [this._makeNodeFrame(child.id), this._makeNodeFrame(newFrame.id)];
-            const newContainer = this._makeNodeContainer(splitDirection, newChildNodes);
+            const newChildNodes = [Frame.generateLayoutNode(child.id), Frame.generateLayoutNode(newFrame.id)];
+            const newContainer = Container.generateLayoutNode(splitDirection, newChildNodes);
             layoutElementParent.nodes.splice(index, 1, newContainer);
         }
 
@@ -102,29 +149,13 @@ export class Gallery {
 
     removeFrame(id) {
 
-        const layoutElementParent = this._findLayoutParentByFrameId(this._layout, id);
+        const layoutElementParent = this._findParentContainerNodeByFrameId(this._layout, id);
 
         const frameElement = layoutElementParent.nodes.find(node => node.id === id);
-        const index = layoutElementParent.nodes.indexOf(frameElement);
-        layoutElementParent.nodes.splice(index, 1);
+        layoutElementParent.nodes.splice(layoutElementParent.nodes.indexOf(frameElement), 1);
+        delete this._framesNodes[id];
 
-        if (layoutElementParent.nodes.length === 1) {
-            const remainingNode = layoutElementParent.nodes[0];
-
-            if (remainingNode.type === 'frame') {
-                layoutElementParent.type = 'frame';
-                layoutElementParent.id = remainingNode.id;
-                delete layoutElementParent.nodes;
-                delete layoutElementParent.direction;
-            }
-            else if (remainingNode.type === 'container') {
-                layoutElementParent.direction = remainingNode.direction;
-                layoutElementParent.nodes = remainingNode.nodes;
-                // todo: this is not enough, youcould have [1, [2,3]] 3 columns in same container
-            }
-        }
-
-        delete this._frames[id];
+        this._organizeLayout(this._layout);
         this._render(this._layout, this._target);
     }
 }

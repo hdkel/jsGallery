@@ -3,14 +3,15 @@ export class FrameMenu {
 	static mapIcon = {
 		'split-horizontal': '\uD83C\uDC39',
 		'split-vertical': '\uD83C\uDC6B',
-		'remove': '\u2715',
+		'remove': '\u2179',
 		'reload': '\u27f3',
 	};
 	static commandToIcon = icon => FrameMenu.mapIcon[icon] || '?';
 
 	constructor(args) {
-		const { target, frame } = args;
+		const { target, frame, canRemove } = args;
 		this._frame = frame;
+		this._canRemove = canRemove;
 
 		// Makes DOM element.
 		this._domElement = this._createDomElement(target);
@@ -28,7 +29,19 @@ export class FrameMenu {
 	}
 
 	_appendButtons() {
+
+		if (this._canRemove) {
+			this._domElement.append(this._createButton({
+				action: () => { this._frame.removeSelf(); },
+				icon: 'remove',
+			}));
+		}
+
 		[
+			{
+				action: () => { this._frame.setBackground('none'); },
+				icon: 'reload',
+			},
 			{
 				action: () => { this._frame.split('row'); },
 				icon: 'split-horizontal',
@@ -36,14 +49,6 @@ export class FrameMenu {
 			{
 				action: () => { this._frame.split('column'); },
 				icon: 'split-vertical',
-			},
-			{
-				action: () => { this._frame.setBackground('none'); },
-				icon: 'reload',
-			},
-			{
-				action: () => { this._frame.removeSelf(); },
-				icon: 'remove',
 			}
 		].forEach((command) => {
 			this._domElement.append(this._createButton(command));

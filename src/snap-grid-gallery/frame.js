@@ -1,13 +1,17 @@
 import {FrameMenu} from "./frame_menu.js";
+import {hashCode} from "../utility.js";
 
 export class Frame {
 
     static pickColor = () => Math.floor(Math.random()*16777215).toString(16);
+    static generatePropertyNode = () => ({ id:  hashCode(4), bgColor: Frame.pickColor() });
+    static generateLayoutNode = (id) => ({ type: 'frame', id });
 
     constructor(args) {
-        const { target, gallery, node } = args;
+        const { target, gallery, node, canRemove } = args;
         this._gallery = gallery;
         this._node = node;
+        this._canRemove = canRemove;
 
         this._frame = this._gallery.getFrameById(node.id);
         this._id = this._frame.id;
@@ -19,7 +23,7 @@ export class Frame {
         this._domElement.class = this;
         node.dom = this._domElement;
         target.append(this._domElement);
-        new FrameMenu({ target: this._domElement, frame: this });
+        new FrameMenu({ target: this._domElement, frame: this, canRemove: this._canRemove });
 
         this._bindDrop();
     }
