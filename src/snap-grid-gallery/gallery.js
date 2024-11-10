@@ -4,8 +4,6 @@ import {Container} from "./container.js";
 
 export class Gallery {
 
-    static initialDirection = "row";
-
     constructor(args) {
 
         // Extract
@@ -14,24 +12,24 @@ export class Gallery {
 
         // Initialize
         this._layout = {};
-        this._framesNodes = [];
+        this._frameNodes = [];
 
         // For debugging purpose, consider making optional.
         window.sg = {};
         window.sg.layout = this._layout;
-        window.sg.frames = this._framesNodes;
+        window.sg.frames = this._frameNodes;
 
         // Prepare the initial frame
         const initNode = Frame.generatePropertyNode();
-        this._framesNodes[initNode.id] = initNode;
+        this._frameNodes[initNode.id] = initNode;
         this._layout = Frame.generateLayoutNode(initNode.id);
 
         // Render
-        this._render(this._layout, this._target, Gallery.initialDirection);
+        this._constructDomElements();
     }
 
     getFrameById(id) {
-        return this._framesNodes[id];
+        return this._frameNodes[id];
     }
 
     _organizeLayout(layoutNode) {
@@ -87,14 +85,14 @@ export class Gallery {
 
     // This method, and all subcomponents, only deals with UI update.
     // ABSOLUTELY NO data manipulation on this._layout or this._framesNodes is allowed from inside.
-    _render(layout, target) {
+    _constructDomElements() {
         console.log(this._layout);
         emptyDom(this._target);
-        if (layout.type === 'container') {
-            new Container({target, gallery: this, layout});
+        if (this._layout.type === 'container') {
+            new Container({target: this._target, gallery: this, layout: this._layout});
         }
-        else if (layout.type === 'frame') {
-            new Frame({ target, gallery: this, node: layout, canRemove: false });
+        else if (this._layout.type === 'frame') {
+            new Frame({ target: this._target, gallery: this, node: this._layout, canRemove: false });
         }
     }
 
@@ -115,7 +113,7 @@ export class Gallery {
     }
 
     updateFrameProperties(id, properties) {
-        const frame = this._framesNodes[id];
+        const frame = this._frameNodes[id];
         Object.assign(frame, properties);
     }
 
@@ -128,7 +126,7 @@ export class Gallery {
 
         // Make the new frame and decide how to append later.
         const newFrame = Frame.generatePropertyNode();
-        this._framesNodes[newFrame.id] = newFrame;
+        this._frameNodes[newFrame.id] = newFrame;
 
         if (splitDirection === layoutElementParent.direction) {
             // Same direction, just add to array
@@ -145,7 +143,7 @@ export class Gallery {
 
         // Layout adjustment is done, update debug value and  re-render
         window.sg.layout = this._layout;
-        this._render(this._layout, this._target);
+        this._constructDomElements();
     }
 
     removeFrame(id) {
@@ -153,10 +151,10 @@ export class Gallery {
 
         const frameElement = layoutElementParent.nodes.find(node => node.id === id);
         layoutElementParent.nodes.splice(layoutElementParent.nodes.indexOf(frameElement), 1);
-        delete this._framesNodes[id];
+        delete this._frameNodes[id];
 
         this._organizeLayout(this._layout);
         window.sg.layout = this._layout;
-        this._render(this._layout, this._target);
+        this._constructDomElements();
     }
 }
