@@ -4,7 +4,10 @@ import {hashCode} from "../utility.js";
 export class Frame {
 
     static pickColor = () => Math.floor(Math.random()*16777215).toString(16);
-    static generatePropertyNode = () => ({ id:  hashCode(4), bgColor: Frame.pickColor() });
+    static generatePropertyNode = () => ({
+        id:  hashCode(4),
+        bgColor: Frame.pickColor(),
+    });
     static generateLayoutNode = (id) => ({ type: 'frame', id });
 
     constructor(args) {
@@ -26,6 +29,7 @@ export class Frame {
         new FrameMenu({ target: this._domElement, frame: this, canRemove: this._canRemove });
 
         this._bindDrop();
+        this._bindWheel();
     }
 
     _createDomElement() {
@@ -40,20 +44,57 @@ export class Frame {
         const dom = this._domElement;
         dom.ondragenter = (ev) => { ev.preventDefault(); ev.stopPropagation();}
         dom.ondragover = (ev) => { ev.preventDefault(); ev.stopPropagation(); }
-        dom.ondrop = function(event) {
+        dom.ondrop = (event) => {
             const pic = event.dataTransfer.files[0];
             if (pic) {
                 const reader = new FileReader();
-                reader.onload = (ev) => this.setBackground(`url(${ev.target.result})`);
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.src = ev.target.result;
+                    img.onload = () => {
+                        this._calculateZoom(img.width / img.height);
+                        this.setBackground(ev.target.result);
+                    }
+                }
                 reader.readAsDataURL(pic);
             }
+
             event.preventDefault();
             event.stopPropagation();
-        }.bind(this);
+        };
+    }
+
+    _bindWheel() {
+        this._domElement.addEventListener('wheel', (event) => {
+            event.preventDefault();
+
+            let zoomLevel = this._zoomLevel || 100;
+            if (event.deltaY > 0) {
+                zoomLevel += 10;
+            } else {
+                zoomLevel -= 10;
+            }
+            this._zoomLevel = Math.max(this._zoomLevelMin, Math.min(zoomLevel, this._zoomLevelMax));
+            this._domElement.style.backgroundSize = `${this._zoomLevel}%`;
+        });
+    }
+
+    _calculateZoom(imgRatio) {
+        this._imgRatio = imgRatio;
+
+        const frameRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
+        const zoomRatio = frameRatio < imgRatio ? imgRatio / frameRatio : 1;
+
+        this._zoomLevel = zoomRatio * 100;
+        this._zoomLevelMin = this._zoomLevel;
+        this._zoomLevelMax = this._zoomLevelMin * 3;
+
+        this._domElement.style.backgroundSize = `${this._zoomLevel}%`;
+        this._gallery.updateFrameProperties(this._id, { imgRatio: this._imgRatio });
     }
 
     setBackground(value) {
-        this._domElement.style.backgroundImage = value;
+        this._domElement.style.backgroundImage = `url(${value})`;
         this._gallery.updateFrameProperties(this._id, { backgroundImage: value });
     };
 

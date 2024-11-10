@@ -143,12 +143,12 @@ export class Gallery {
             layoutElementParent.nodes.splice(index, 1, newContainer);
         }
 
-        // Layout adjustment is done, let's re-render
+        // Layout adjustment is done, update debug value and  re-render
+        window.sg.layout = this._layout;
         this._render(this._layout, this._target);
     }
 
     removeFrame(id) {
-
         const layoutElementParent = this._findParentContainerNodeByFrameId(this._layout, id);
 
         const frameElement = layoutElementParent.nodes.find(node => node.id === id);
@@ -156,6 +156,7 @@ export class Gallery {
         delete this._framesNodes[id];
 
         this._organizeLayout(this._layout);
+        window.sg.layout = this._layout;
         this._render(this._layout, this._target);
     }
 }
