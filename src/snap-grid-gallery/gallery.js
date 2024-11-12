@@ -25,10 +25,10 @@ export class Gallery {
         this._layout = Frame.generateLayoutNode(initNode.id);
 
         // Render
-        this._constructDomElements();
+        this._createDomElement();
     }
 
-    getFrameById(id) {
+    getFramePropertyNodeById(id) {
         return this._frameNodes[id];
     }
 
@@ -85,14 +85,14 @@ export class Gallery {
 
     // This method, and all subcomponents, only deals with UI update.
     // ABSOLUTELY NO data manipulation on this._layout or this._framesNodes is allowed from inside.
-    _constructDomElements() {
+    _createDomElement() {
         console.log(this._layout);
         emptyDom(this._target);
         if (this._layout.type === 'container') {
-            new Container({target: this._target, gallery: this, layout: this._layout});
+            new Container({target: this._target, gallery: this, layoutNode: this._layout});
         }
         else if (this._layout.type === 'frame') {
-            new Frame({ target: this._target, gallery: this, node: this._layout, canRemove: false });
+            new Frame({ target: this._target, gallery: this, layoutNode: this._layout, canRemove: false });
         }
     }
 
@@ -143,7 +143,7 @@ export class Gallery {
 
         // Layout adjustment is done, update debug value and  re-render
         window.sg.layout = this._layout;
-        this._constructDomElements();
+        this._createDomElement();
     }
 
     removeFrame(id) {
@@ -155,6 +155,6 @@ export class Gallery {
 
         this._organizeLayout(this._layout);
         window.sg.layout = this._layout;
-        this._constructDomElements();
+        this._createDomElement();
     }
 }

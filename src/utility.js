@@ -19,3 +19,5 @@ export const hashCode = (length) => {
 	}
 	return result;
 }
+
+export const explicitBool = (input, defaultValue) => (input === undefined || input === null) ? defaultValue : !!input;

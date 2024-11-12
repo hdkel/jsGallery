@@ -5,17 +5,16 @@ export class Splitter {
 
 	constructor(args) {
 		const { target, layoutDirection } = args;
-
-		// Create DOM element
 		this._domElement = this._createDomElement(target, layoutDirection);
-		this._domElement.class = this;
-		target.append(this._domElement);
 	}
 
 	_createDomElement(target, layoutDirection) {
 		const dom = document.createElement('div');
+		dom.class = this;
 		dom.classList.add('gResizer');
 		dom.classList.add(Splitter.directionToCss(layoutDirection));
+
+		target.append(dom);
 		return dom;
 	}
 }

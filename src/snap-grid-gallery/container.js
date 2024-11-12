@@ -10,43 +10,39 @@ export class Container {
     constructor(args) {
 
         // Extract
-        const { target, gallery, layout } = args;
-        this._layout = layout;
+        const { target, gallery, layoutNode } = args;
+        this._layoutNode = layoutNode;
         this._gallery = gallery;
 
-        // Create DOM element
-        this._domElement = this._createDomElement();
-        this._domElement.class = this;
-        this._layout.dom = this._domElement;
-        target.append(this._domElement);
-
+        // Create DOM elements
+        this._layoutNode.dom = this._domElement = this._createDomElement(target);
         this._createChildDomElements();
-
-        // Return for outside world
-        return this._domElement;
     }
 
-    _createDomElement() {
+    _createDomElement(target) {
         const dom = document.createElement('div');
+        dom.class = this;
         dom.classList.add('gContainer');
-        dom.classList.add(Container.directionToCss(this._layout.direction));
+        dom.classList.add(Container.directionToCss(this._layoutNode.direction));
+
+        target.append(dom);
         return dom;
     }
 
     _createChildDomElements() {
-        this._layout.nodes.forEach((node, index) => {
+        this._layoutNode.nodes.forEach((layoutNode, index) => {
 
             // Not the first item, meaning we need splitter
             if (index !== 0) {
-                new Splitter({ target: this._domElement, layoutDirection: this._layout.direction});
+                new Splitter({ target: this._domElement, layoutDirection: this._layoutNode.direction});
             }
 
-            switch (node.type) {
+            switch (layoutNode.type) {
                 case 'frame':
-                    new Frame({ target: this._domElement, gallery: this._gallery, node, canRemove: this._layout.nodes.length > 1 });
+                    new Frame({ target: this._domElement, gallery: this._gallery, layoutNode: layoutNode });
                     break;
                 case 'container':
-                    new Container({target: this._domElement, gallery: this._gallery, layout: node });
+                    new Container({target: this._domElement, gallery: this._gallery, layoutNode: layoutNode });
                     break;
                 default:
                     return;

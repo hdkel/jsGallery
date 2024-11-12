@@ -13,18 +13,16 @@ export class FrameMenu {
 		this._frame = frame;
 		this._canRemove = canRemove;
 
-		// Makes DOM element.
 		this._domElement = this._createDomElement(target);
-		this._domElement.class = this;
-		target.append(this._domElement);
-
-		// and buttons
 		this._appendButtons();
 	}
 
-	_createDomElement() {
+	_createDomElement(target) {
 		const menu = document.createElement('div');
+		menu.class = this;
 		menu.classList.add('gMenu2');
+
+		target.append(menu);
 		return menu;
 	}
 
@@ -39,7 +37,7 @@ export class FrameMenu {
 
 		[
 			{
-				action: () => { this._frame.setBackground('none'); },
+				action: () => { this._frame.setBackground(null); },
 				icon: 'reload',
 			},
 			{
@@ -61,10 +59,5 @@ export class FrameMenu {
 		button.onclick = command.action;
 		button.classList.add('gMenuButton');
 		return button;
-	}
-
-	dispose() {
-		this._domElement.remove();
-		return this._domElement;
 	}
 }

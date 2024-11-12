@@ -1,5 +1,5 @@
 import {FrameMenu} from "./frame_menu.js";
-import {hashCode} from "../utility.js";
+import {explicitBool, hashCode} from "../utility.js";
 
 export class Frame {
 
@@ -11,32 +11,34 @@ export class Frame {
     static generateLayoutNode = (id) => ({ type: 'frame', id });
 
     constructor(args) {
-        const { target, gallery, node, canRemove } = args;
+
+        // Extract and set class properties
+        const { target, gallery, layoutNode, canRemove } = args;
         this._gallery = gallery;
-        this._node = node;
-        this._canRemove = canRemove;
+        this._layoutNode = layoutNode;
+        this._canRemove = explicitBool(canRemove, true);
 
-        this._frame = this._gallery.getFrameById(node.id);
-        this._id = this._frame.id;
-        this._color = this._frame.bgColor;
-        this._backgroundImage = this._frame.backgroundImage;
+        // Property node props.
+        this._propertyNode = this._gallery.getFramePropertyNodeById(this._layoutNode.id);
+        this._id = this._propertyNode.id;
+        this._color = this._propertyNode.bgColor;
+        this._backgroundImage = this._propertyNode.backgroundImage;
 
-        // Makes DOM element
-        this._domElement = this._createDomElement();
-        this._domElement.class = this;
-        node.dom = this._domElement;
-        target.append(this._domElement);
-        new FrameMenu({ target: this._domElement, frame: this, canRemove: this._canRemove });
-
+        // Makes DOM element and bind interactions
+        this._layoutNode.dom = this._domElement = this._createDomElement(target);
         this._bindDrop();
         this._bindWheel();
     }
 
-    _createDomElement() {
+    _createDomElement(target) {
         const dom = document.createElement('div');
+        dom.class = this;
         dom.style.backgroundColor = this._color;
         dom.style.backgroundImage = this._backgroundImage;
         dom.classList.add('gFrame');
+
+        new FrameMenu({ target: dom, frame: this, canRemove: this._canRemove });
+        target.append(dom);
         return dom;
     }
 
@@ -94,12 +96,14 @@ export class Frame {
     }
 
     setBackground(value) {
-        this._domElement.style.backgroundImage = `url(${value})`;
+        this._domElement.style.backgroundImage = value ? `url(${value})` : null;
         this._gallery.updateFrameProperties(this._id, { backgroundImage: value });
     };
 
-    split(direction = 'row') {
-        this._gallery.split(this._node, direction);
+    split(direction) {
+        if (['row','column'].includes(direction)) {
+            this._gallery.split(this._layoutNode, direction);
+        }
     }
 
     removeSelf() {
