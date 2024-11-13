@@ -22,12 +22,14 @@ export class Frame {
         this._propertyNode = this._gallery.getFramePropertyNodeById(this._layoutNode.id);
         this._id = this._propertyNode.id;
         this._color = this._propertyNode.bgColor;
+        this._imgRatio = this._propertyNode.imgRatio;
         this._backgroundImage = this._propertyNode.backgroundImage;
 
         // Makes DOM element and bind interactions
         this._layoutNode.dom = this._domElement = this._createDomElement(target);
         this._bindDrop();
         this._bindWheel();
+        this._layoutNode.class = this;
     }
 
     _createDomElement(target) {
@@ -99,6 +101,12 @@ export class Frame {
         this._domElement.style.backgroundImage = value ? `url(${value})` : null;
         this._gallery.updateFrameProperties(this._id, { backgroundImage: value });
     };
+
+    // re-renders the UI, called after layout changed or window resized
+    render() {
+        this._calculateZoom(this._imgRatio);
+        this.setBackground(this._backgroundImage);
+    }
 
     split(direction) {
         if (['row','column'].includes(direction)) {

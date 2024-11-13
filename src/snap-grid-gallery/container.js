@@ -17,6 +17,7 @@ export class Container {
         // Create DOM elements
         this._layoutNode.dom = this._domElement = this._createDomElement(target);
         this._createChildDomElements();
+        this._layoutNode.class = this;
     }
 
     _createDomElement(target) {
@@ -48,5 +49,11 @@ export class Container {
                     return;
             }
         });
+    }
+
+    render() {
+        this._layoutNode.nodes.forEach((childNode) => {
+            childNode.class.render();
+        })
     }
 }

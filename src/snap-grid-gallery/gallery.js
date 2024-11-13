@@ -25,7 +25,7 @@ export class Gallery {
         this._layout = Frame.generateLayoutNode(initNode.id);
 
         // Render
-        this._createDomElement();
+        this._render();
     }
 
     getFramePropertyNodeById(id) {
@@ -85,7 +85,7 @@ export class Gallery {
 
     // This method, and all subcomponents, only deals with UI update.
     // ABSOLUTELY NO data manipulation on this._layout or this._framesNodes is allowed from inside.
-    _createDomElement() {
+    _render() {
         console.log(this._layout);
         emptyDom(this._target);
         if (this._layout.type === 'container') {
@@ -94,6 +94,9 @@ export class Gallery {
         else if (this._layout.type === 'frame') {
             new Frame({ target: this._target, gallery: this, layoutNode: this._layout, canRemove: false });
         }
+
+        // Everything has bene created and properly sized, now to render each frame under their new dimension
+        this._layout.class.render();
     }
 
     _findParentContainerNodeByFrameId(layoutNode, id) {
@@ -143,7 +146,7 @@ export class Gallery {
 
         // Layout adjustment is done, update debug value and  re-render
         window.sg.layout = this._layout;
-        this._createDomElement();
+        this._render();
     }
 
     removeFrame(id) {
@@ -155,6 +158,6 @@ export class Gallery {
 
         this._organizeLayout(this._layout);
         window.sg.layout = this._layout;
-        this._createDomElement();
+        this._render();
     }
 }
