@@ -18,8 +18,6 @@ button {
     display: flex;
     flex: 1;
     background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
     user-select: none;
 }
 .gContainer {

@@ -22,8 +22,7 @@ export class Frame {
         this._propertyNode = this._gallery.getFramePropertyNodeById(this._layoutNode.id);
         this._id = this._propertyNode.id;
         this._color = this._propertyNode.bgColor;
-        this._imgRatio = this._propertyNode.imgRatio;
-        this._backgroundImage = this._propertyNode.backgroundImage;
+        this._imgProps = this._propertyNode.imgProps || {};
 
         // Makes DOM element and bind interactions
         this._layoutNode.dom = this._domElement = this._createDomElement(target);
@@ -36,7 +35,6 @@ export class Frame {
         const dom = document.createElement('div');
         dom.class = this;
         dom.style.backgroundColor = this._color;
-        dom.style.backgroundImage = this._backgroundImage;
         dom.classList.add('gFrame');
 
         new FrameMenu({ target: dom, frame: this, canRemove: this._canRemove });
@@ -54,10 +52,20 @@ export class Frame {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     const img = new Image();
-                    img.src = ev.target.result;
-                    img.onload = () => {
-                        this._calculateZoom(img.width / img.height);
-                        this.setBackground(ev.target.result);
+                    const result = ev.target.result;
+                    if (typeof result === 'string') {
+                        img.src = result;
+                        img.onload = () => {
+                            this._setImgProps({
+                                width: img.width,
+                                height: img.height,
+                                ratio: img.width / img.height,
+                                backgroundImage: result
+                            });
+                            this._setZoom();
+                            this._setPosition();
+                            this.setBackground();
+                        }
                     }
                 }
                 reader.readAsDataURL(pic);
@@ -72,40 +80,61 @@ export class Frame {
         this._domElement.addEventListener('wheel', (event) => {
             event.preventDefault();
 
-            let zoomLevel = this._zoomLevel || 100;
+            let zoomRatio = this._zoomRatio || 1;
+            const step = (this._zoomRatioMax - this._zoomRatioMin) / 100;
             if (event.deltaY > 0) {
-                zoomLevel += 10;
+                zoomRatio += step;
             } else {
-                zoomLevel -= 10;
+                zoomRatio -= step;
             }
-            this._zoomLevel = Math.max(this._zoomLevelMin, Math.min(zoomLevel, this._zoomLevelMax));
-            this._domElement.style.backgroundSize = `${this._zoomLevel}%`;
+            this._zoomRatio = Math.max(this._zoomRatioMin, Math.min(zoomRatio, this._zoomRatioMax));
+
+            const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
+            const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+            this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
         });
     }
 
-    _calculateZoom(imgRatio) {
-        this._imgRatio = imgRatio;
-
-        const frameRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
-        const zoomRatio = frameRatio < imgRatio ? imgRatio / frameRatio : 1;
-
-        this._zoomLevel = zoomRatio * 100;
-        this._zoomLevelMin = this._zoomLevel;
-        this._zoomLevelMax = this._zoomLevelMin * 3;
-
-        this._domElement.style.backgroundSize = `${this._zoomLevel}%`;
-        this._gallery.updateFrameProperties(this._id, { imgRatio: this._imgRatio });
+    _setImgProps(imgProps) {
+        this._imgProps = { ...this._imgProps, ...imgProps };
+        this._gallery.updateFrameProperties(this._id, { imgProps: this._imgProps });
     }
 
-    setBackground(value) {
-        this._domElement.style.backgroundImage = value ? `url(${value})` : null;
-        this._gallery.updateFrameProperties(this._id, { backgroundImage: value });
+    _setZoom() {
+        const imgRatio = this._imgProps.ratio;
+        const frameRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
+
+        const frameWidth = this._domElement.offsetWidth;
+        const frameHeight = this._domElement.offsetHeight;
+        const imgWidth = this._imgProps.width;
+        const imgHeight = this._imgProps.height;
+
+        this._zoomRatio = frameRatio < imgRatio ? frameHeight / imgHeight : frameWidth / imgWidth;
+        this._zoomRatioMin = this._zoomRatio;
+        this._zoomRatioMax = this._zoomRatioMin * 2;
+
+        const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
+        const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+        this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
+    }
+
+    _setPosition() {
+        const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
+        const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+        const horizontalExtra = displayWidth - this._domElement.offsetWidth;
+        const verticalExtra = displayHeight - this._domElement.offsetHeight;
+        this._domElement.style.backgroundPosition = `-${horizontalExtra / 2}px -${verticalExtra / 2}px`;
+    }
+
+    setBackground() {
+        this._domElement.style.backgroundImage = this._imgProps.backgroundImage ? `url(${this._imgProps.backgroundImage})` : null;
     };
 
     // re-renders the UI, called after layout changed or window resized
     render() {
-        this._calculateZoom(this._imgRatio);
-        this.setBackground(this._backgroundImage);
+        this._setZoom();
+        this._setPosition();
+        this.setBackground();
     }
 
     split(direction) {
