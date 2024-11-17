@@ -21,3 +21,10 @@ export const hashCode = (length) => {
 }
 
 export const explicitBool = (input, defaultValue) => (input === undefined || input === null) ? defaultValue : !!input;
+
+export const clamp = (value, min, max) => {
+	if (min > max) {
+		throw new Error("min cannot be greater than max");
+	}
+	return Math.max(min, Math.min(max, value));
+}

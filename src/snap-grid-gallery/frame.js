@@ -1,5 +1,5 @@
 import {FrameMenu} from "./frame_menu.js";
-import {explicitBool, hashCode} from "../utility.js";
+import {clamp, explicitBool, hashCode} from "../utility.js";
 
 export class Frame {
 
@@ -59,12 +59,13 @@ export class Frame {
                             this._setImgProps({
                                 width: img.width,
                                 height: img.height,
-                                ratio: img.width / img.height,
+                                aspectRatio: img.width / img.height,
                                 backgroundImage: result
                             });
-                            this._setZoom();
-                            this._setPosition();
-                            this.setBackground();
+                            this._setDefaultZoom();
+                            this._setDefaultPosition();
+                            this._setPositionBoundary();
+                            this.setBackground(result);
                         }
                     }
                 }
@@ -81,18 +82,46 @@ export class Frame {
             event.preventDefault();
 
             let zoomRatio = this._zoomRatio || 1;
-            const step = (this._zoomRatioMax - this._zoomRatioMin) / 100;
+            const zoomRatioOld = zoomRatio;
+            const step = (this._zoomRatioMax - this._zoomRatioMin) / 32;
             if (event.deltaY > 0) {
                 zoomRatio += step;
             } else {
                 zoomRatio -= step;
             }
-            this._zoomRatio = Math.max(this._zoomRatioMin, Math.min(zoomRatio, this._zoomRatioMax));
+            this._zoomRatio = clamp(zoomRatio, this._zoomRatioMin, this._zoomRatioMax);
 
-            const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
-            const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+            this._setPositionBoundary();
+            this._alignToAnchor(event, zoomRatioOld);
+
+            const [displayWidth, displayHeight] = this._scaleDisplaySize();
             this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
         });
+    }
+
+    _alignToAnchor(event, zoomRatioOld) {
+        const [focalShiftX, focalShiftY] = this._calculateFocalPointShift(event, zoomRatioOld);
+
+        this._positionX = clamp(this._positionX - focalShiftX, this._positionMinX, 0);
+        this._positionY = clamp(this._positionY - focalShiftY, this._positionMinY, 0);
+        this._domElement.style.backgroundPosition = `${this._positionX}px ${this._positionY}px`;
+    }
+
+    _calculateFocalPointShift(event, zoomRatioOld) {
+        const { clientX, clientY } = event;
+        const containerRect = this._domElement.getBoundingClientRect();
+
+        const focalContainerX = clientX - containerRect.left;
+        const focalImageX = focalContainerX - this._positionX;
+        const focalImageXProportion = focalImageX / (this._imgProps.width * zoomRatioOld);
+        const sizeChangeX = this._imgProps.width * (this._zoomRatio - zoomRatioOld);
+
+        const focalContainerY = clientY - containerRect.top;
+        const focalImageY = focalContainerY - this._positionY;
+        const focalImageYProportion = focalImageY / (this._imgProps.height * zoomRatioOld);
+        const sizeChangeY = this._imgProps.height * (this._zoomRatio - zoomRatioOld);
+
+        return [sizeChangeX * focalImageXProportion, sizeChangeY * focalImageYProportion];
     }
 
     _setImgProps(imgProps) {
@@ -100,41 +129,55 @@ export class Frame {
         this._gallery.updateFrameProperties(this._id, { imgProps: this._imgProps });
     }
 
-    _setZoom() {
-        const imgRatio = this._imgProps.ratio;
-        const frameRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
+    _setDefaultZoom() {
+        const imgAspectRatio = this._imgProps.aspectRatio;
+        const frameAspectRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
 
         const frameWidth = this._domElement.offsetWidth;
         const frameHeight = this._domElement.offsetHeight;
         const imgWidth = this._imgProps.width;
         const imgHeight = this._imgProps.height;
 
-        this._zoomRatio = frameRatio < imgRatio ? frameHeight / imgHeight : frameWidth / imgWidth;
+        // image is wider ? fit y-axis : along x
+        this._zoomRatio = frameAspectRatio < imgAspectRatio ? frameHeight / imgHeight : frameWidth / imgWidth;
         this._zoomRatioMin = this._zoomRatio;
-        this._zoomRatioMax = this._zoomRatioMin * 2;
+        this._zoomRatioMax = this._zoomRatioMin * 3;
 
-        const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
-        const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+        const [displayWidth, displayHeight] = this._scaleDisplaySize();
         this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
     }
 
-    _setPosition() {
-        const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
-        const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
+    _setDefaultPosition() {
+        const [displayWidth, displayHeight] = this._scaleDisplaySize();
         const horizontalExtra = displayWidth - this._domElement.offsetWidth;
         const verticalExtra = displayHeight - this._domElement.offsetHeight;
-        this._domElement.style.backgroundPosition = `-${horizontalExtra / 2}px -${verticalExtra / 2}px`;
+        this._positionX = (- horizontalExtra / 2);
+        this._positionY = (- verticalExtra / 2);
+
+        this._domElement.style.backgroundPosition = `${this._positionX}px ${this._positionY}px`;
     }
 
-    setBackground() {
-        this._domElement.style.backgroundImage = this._imgProps.backgroundImage ? `url(${this._imgProps.backgroundImage})` : null;
+    _setPositionBoundary() {
+        const [displayWidth, displayHeight] = this._scaleDisplaySize();
+        this._positionMinX = this._domElement.offsetWidth - displayWidth;
+        this._positionMinY = this._domElement.offsetHeight - displayHeight;
+    }
+
+    _scaleDisplaySize() {
+        const displayWidth = (this._imgProps.width * this._zoomRatio);
+        const displayHeight = (this._imgProps.height * this._zoomRatio);
+        return [displayWidth, displayHeight];
+    }
+
+    setBackground(img) {
+        this._domElement.style.backgroundImage = img ? `url(${img})` : null;
     };
 
     // re-renders the UI, called after layout changed or window resized
     render() {
-        this._setZoom();
-        this._setPosition();
-        this.setBackground();
+        this._setDefaultZoom();
+        this._setDefaultPosition();
+        this.setBackground(this._imgProps.backgroundImage);
     }
 
     split(direction) {
