@@ -28,6 +28,7 @@ export class Frame {
         this._layoutNode.dom = this._domElement = this._createDomElement(target);
         this._bindDrop();
         this._bindWheel();
+        this._bindDragMove();
         this._layoutNode.class = this;
     }
 
@@ -96,6 +97,36 @@ export class Frame {
 
             const [displayWidth, displayHeight] = this._scaleDisplaySize();
             this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
+        });
+    }
+
+    _bindDragMove() {
+        const dom = this._domElement;
+        const getDeltaInClamp = (event) => {
+            const deltaX = event.clientX - this._dragStartX;
+            const deltaY = event.clientY - this._dragStartY;
+            const positionX = clamp(this._positionX + deltaX, this._positionMinX, 0);
+            const positionY = clamp(this._positionY + deltaY, this._positionMinY, 0);
+            return [positionX, positionY];
+        }
+
+        dom.addEventListener("mousedown", (event) => {
+           this._isDragging = true;
+           this._dragStartX = event.clientX;
+           this._dragStartY = event.clientY;
+           dom.style.cursor = 'drag';
+        });
+        dom.addEventListener("mousemove", (event) => {
+            if (!this._isDragging) return;
+            const [positionX, positionY] = getDeltaInClamp(event);
+            dom.style.backgroundPosition = `${positionX}px ${positionY}px`;
+        });
+        dom.addEventListener("mouseup", (event) => {
+            this._isDragging = false;
+            const [positionX, positionY] = getDeltaInClamp(event);
+            this._positionX = positionX;
+            this._positionY = positionY;
+            dom.style.cursor = 'default';
         });
     }
 
@@ -177,6 +208,7 @@ export class Frame {
     render() {
         this._setDefaultZoom();
         this._setDefaultPosition();
+        this._setPositionBoundary();
         this.setBackground(this._imgProps.backgroundImage);
     }
 

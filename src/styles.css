@@ -37,21 +37,11 @@ button {
     min-height: 5px;
     background-color: #999;
 }
-.gResizer.gResizer-vertical,
 .gResizer.gResizer-alongHorizontal{
     cursor: col-resize;
 }
-.gResizer.gResizer-horizontal,
 .gResizer.gResizer-alongVertical{
     cursor: row-resize;
-}
-.gMenu {
-    visibility: hidden;
-    position: absolute;
-    display: flex;
-    top: 0;
-    right: 0;
-    background-color: rgba(127, 127, 127, 0.5);
 }
 .gMenu2 {
     visibility: hidden;
@@ -64,7 +54,6 @@ button {
     left: 0;
     background-color: rgba(127, 127, 127, 0.5);
 }
-.gFrame:hover>.gMenu,
 .gFrame:hover>.gMenu2 {
     visibility: visible;
 }

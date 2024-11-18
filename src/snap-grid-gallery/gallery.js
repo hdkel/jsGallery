@@ -2,6 +2,9 @@ import {emptyDom} from "../utility.js";
 import {Frame} from "./frame.js";
 import {Container} from "./container.js";
 
+/**
+ * Gallery app that allows freely split and rearrange the viewport.
+ */
 export class Gallery {
 
     constructor(args) {
