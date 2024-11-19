@@ -2,9 +2,9 @@
   "name": "snap-grid-js",
   "version": "0.0.2",
   "description": "A collection of utilities.",
-  "main": "src/index.html",
+  "main": "public/index.html",
   "scripts": {
-    "start": "live-server src --port=8080 --entry-file=src --mount=/sg:src --mount=/board:src --mount=/rws:src"
+    "start": "live-server public --port=8080 --entry-file=public --mount=/sg:public --mount=/board:public --mount=/rws:public"
   },
   "author": "James Mulberry",
   "devDependencies": {
