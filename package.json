@@ -4,7 +4,7 @@
   "description": "A collection of utilities.",
   "main": "index.html",
   "scripts": {
-    "start": "live-server --port=8080"
+    "start": "live-server --port=8080 --mount=/sg:. --mount=/board:. --mount=/rws:."
   },
   "author": "James Mulberry",
   "devDependencies": {

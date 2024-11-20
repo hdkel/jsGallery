@@ -43,7 +43,19 @@ const populateDom = (path, target) => {
 	}
 }
 
-populateDom(new URL(window.location.href).pathname, document.getElementById('app'));
+/**
+ * Catches redirection from 404.html and handles initial state
+ */
+const urlParams = new URLSearchParams(window.location.search);
+const redirectPath = urlParams.get('redirect_path');
+if (redirectPath) {
+	history.replaceState(null, '', redirectPath);
+	if (!!router[redirectPath]) {
+		populateDom(redirectPath, document.getElementById('app'));
+	}
+} else {
+	populateDom(new URL(window.location.href).pathname, document.getElementById('app'));
+}
 
 // On browser back, reset states
 window.onpopstate = () => {
