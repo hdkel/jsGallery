@@ -50,9 +50,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const redirectPath = urlParams.get('redirect_path');
 if (redirectPath) {
 	history.replaceState(null, '', redirectPath);
-	if (!!router[redirectPath]) {
-		populateDom(redirectPath, document.getElementById('app'));
-	}
+	populateDom(!!router[redirectPath] ? redirectPath : "", document.getElementById('app'));
 } else {
 	populateDom(new URL(window.location.href).pathname, document.getElementById('app'));
 }
