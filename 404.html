@@ -1,16 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Redirecting...</title>
     <script>
-        // Redirect all requests to index.html
         const redirectTo = '/index.html';
-        const path = window.location.pathname;
-        const query = window.location.search;
-        const hash = window.location.hash;
-
-        window.location.replace(redirectTo + '?redirect_path=' + encodeURIComponent(path + query + hash));
+        window.location.replace(redirectTo + '?route=' + encodeURIComponent(window.location.pathname));
     </script>
 </head>
 <body>

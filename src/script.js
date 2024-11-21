@@ -47,13 +47,12 @@ const populateDom = (path, target) => {
  * Catches redirection from 404.html and handles initial state
  */
 const urlParams = new URLSearchParams(window.location.search);
-const redirectPath = urlParams.get('redirect_path');
+const redirectPath = urlParams.get('route');
 if (redirectPath) {
-	history.replaceState(null, '', redirectPath);
-	populateDom(!!router[redirectPath] ? redirectPath : "", document.getElementById('app'));
-} else {
-	populateDom(new URL(window.location.href).pathname, document.getElementById('app'));
+	let state = !!router[redirectPath] ? redirectPath : window.location.origin + "/";
+	history.replaceState(null, '', state);
 }
+populateDom(redirectPath || new URL(window.location.href).pathname, document.getElementById('app'));
 
 // On browser back, reset states
 window.onpopstate = () => {
