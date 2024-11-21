@@ -26,10 +26,8 @@ export class Frame {
 
         // Makes DOM element and bind interactions
         this._layoutNode.dom = this._domElement = this._createDomElement(target);
-        this._bindDrop();
-        this._bindWheel();
-        this._bindDragMove();
         this._layoutNode.class = this;
+        this._bindEventHandlers();
     }
 
     _createDomElement(target) {
@@ -43,91 +41,102 @@ export class Frame {
         return dom;
     }
 
-    _bindDrop() {
-        const dom = this._domElement;
-        dom.ondragenter = (ev) => { ev.preventDefault(); ev.stopPropagation();}
-        dom.ondragover = (ev) => { ev.preventDefault(); ev.stopPropagation(); }
-        dom.ondrop = (event) => {
-            const pic = event.dataTransfer.files[0];
-            if (pic) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const img = new Image();
-                    const result = ev.target.result;
-                    if (typeof result === 'string') {
-                        img.src = result;
-                        img.onload = () => {
-                            this._setImgProps({
-                                width: img.width,
-                                height: img.height,
-                                aspectRatio: img.width / img.height,
-                                backgroundImage: result
-                            });
-                            this._setDefaultZoom();
-                            this._setDefaultPosition();
-                            this._setPositionBoundary();
-                            this.setBackground(result);
-                        }
+    _bindEventHandlers() {
+        this._boundDrop = this._handleDrop.bind(this);
+        this._boundWheel = this._handleWheel.bind(this);
+        this._boundMouseDown = this._handleMouseDown.bind(this);
+        this._boundMouseMove = this._handleMouseMove.bind(this);
+        this._boundMouseUp = this._handleMouseUp.bind(this);
+
+        this._domElement.addEventListener('dragenter', this._handleIgnore);
+        this._domElement.addEventListener('dragover', this._handleIgnore);
+        this._domElement.addEventListener("drop", this._boundDrop);
+        this._domElement.addEventListener('wheel', this._boundWheel);
+        this._domElement.addEventListener("mousedown", this._boundMouseDown);
+    }
+
+    _handleIgnore(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    _handleDrop(event) {
+        const pic = event.dataTransfer.files[0];
+        if (pic) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                const result = ev.target.result;
+                if (typeof result === 'string') {
+                    img.src = result;
+                    img.onload = () => {
+                        this._setImgProps({
+                            width: img.width,
+                            height: img.height,
+                            aspectRatio: img.width / img.height,
+                            backgroundImage: result
+                        });
+                        this._setDefaultZoom();
+                        this._setDefaultPosition();
+                        this._setPositionBoundary();
+                        this.setBackground(result);
                     }
                 }
-                reader.readAsDataURL(pic);
             }
-
-            event.preventDefault();
-            event.stopPropagation();
-        };
-    }
-
-    _bindWheel() {
-        this._domElement.addEventListener('wheel', (event) => {
-            event.preventDefault();
-
-            let zoomRatio = this._zoomRatio || 1;
-            const zoomRatioOld = zoomRatio;
-            const step = (this._zoomRatioMax - this._zoomRatioMin) / 32;
-            if (event.deltaY > 0) {
-                zoomRatio += step;
-            } else {
-                zoomRatio -= step;
-            }
-            this._zoomRatio = clamp(zoomRatio, this._zoomRatioMin, this._zoomRatioMax);
-
-            this._setPositionBoundary();
-            this._alignToAnchor(event, zoomRatioOld);
-
-            const [displayWidth, displayHeight] = this._scaleDisplaySize();
-            this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
-        });
-    }
-
-    _bindDragMove() {
-        const dom = this._domElement;
-        const getDeltaInClamp = (event) => {
-            const deltaX = event.clientX - this._dragStartX;
-            const deltaY = event.clientY - this._dragStartY;
-            const positionX = clamp(this._positionX + deltaX, this._positionMinX, 0);
-            const positionY = clamp(this._positionY + deltaY, this._positionMinY, 0);
-            return [positionX, positionY];
+            reader.readAsDataURL(pic);
         }
 
-        dom.addEventListener("mousedown", (event) => {
-           this._isDragging = true;
-           this._dragStartX = event.clientX;
-           this._dragStartY = event.clientY;
-           dom.style.cursor = 'drag';
-        });
-        dom.addEventListener("mousemove", (event) => {
-            if (!this._isDragging) return;
-            const [positionX, positionY] = getDeltaInClamp(event);
-            dom.style.backgroundPosition = `${positionX}px ${positionY}px`;
-        });
-        dom.addEventListener("mouseup", (event) => {
-            this._isDragging = false;
-            const [positionX, positionY] = getDeltaInClamp(event);
-            this._positionX = positionX;
-            this._positionY = positionY;
-            dom.style.cursor = 'default';
-        });
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    _handleWheel(event) {
+        event.preventDefault();
+
+        let zoomRatio = this._zoomRatio || 1;
+        const zoomRatioOld = zoomRatio;
+        const step = (this._zoomRatioMax - this._zoomRatioMin) / 32;
+        if (event.deltaY > 0) {
+            zoomRatio += step;
+        } else {
+            zoomRatio -= step;
+        }
+        this._zoomRatio = clamp(zoomRatio, this._zoomRatioMin, this._zoomRatioMax);
+
+        this._setPositionBoundary();
+        this._alignToAnchor(event, zoomRatioOld);
+
+        const [displayWidth, displayHeight] = this._scaleDisplaySize();
+        this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
+    }
+    _handleMouseDown(event) {
+        this._isDragging = true;
+        this._dragStartX = event.clientX;
+        this._dragStartY = event.clientY;
+        this._domElement.style.cursor = 'drag';
+        document.addEventListener("mousemove", this._boundMouseMove);
+        document.addEventListener("mouseup", this._boundMouseUp);
+    }
+    _handleMouseMove(event) {
+        if (!this._isDragging) return;
+        const [positionX, positionY] = this._getDeltaInClamp(event);
+        this._domElement.style.backgroundPosition = `${positionX}px ${positionY}px`;
+    }
+    _handleMouseUp(event) {
+        if (!this._isDragging) return;
+        this._isDragging = false;
+        const [positionX, positionY] = this._getDeltaInClamp(event);
+        this._positionX = positionX;
+        this._positionY = positionY;
+        this._domElement.style.cursor = 'default';
+        document.removeEventListener('mousemove', this._boundMouseMove);
+        document.removeEventListener('mouseup', this._boundMouseUp);
+    }
+
+    _getDeltaInClamp(event) {
+        const deltaX = event.clientX - this._dragStartX;
+        const deltaY = event.clientY - this._dragStartY;
+        const positionX = clamp(this._positionX + deltaX, this._positionMinX, 0);
+        const positionY = clamp(this._positionY + deltaY, this._positionMinY, 0);
+        return [positionX, positionY];
     }
 
     _alignToAnchor(event, zoomRatioOld) {
@@ -219,6 +228,13 @@ export class Frame {
     }
 
     removeSelf() {
+        this._domElement.removeEventListener("dragenter", this._handleIgnore);
+        this._domElement.removeEventListener("dragover", this._handleIgnore);
+        this._domElement.removeEventListener("drop", this._boundDrop);
+        this._domElement.removeEventListener("wheel", this._boundWheel);
+        this._domElement.removeEventListener("mousedown", this._boundMouseDown);
+        document.removeEventListener('mousemove', this._boundMouseMove);
+        document.removeEventListener('mouseup', this._boundMouseUp);
         this._gallery.removeFrame(this._id);
     }
 }
