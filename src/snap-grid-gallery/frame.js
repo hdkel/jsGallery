@@ -72,12 +72,12 @@ export class Frame {
                         this._setImgProps({
                             width: img.width,
                             height: img.height,
-                            aspectRatio: img.width / img.height,
-                            backgroundImage: result
+                            backgroundImage: result,
+                            preferredZoomRatio: null, // reset when new pic arrives
                         });
                         this._setDefaultZoom();
-                        this._setDefaultPosition();
                         this._setPositionBoundary();
+                        this._setDefaultPosition();
                         this.setBackground(result);
                     }
                 }
@@ -103,7 +103,7 @@ export class Frame {
         this._imgProps.preferredZoomRatio = this._zoomRatio;
 
         this._setPositionBoundary();
-        this._alignToAnchor(event, zoomRatioOld);
+        this._alignToZoomAnchor(event, zoomRatioOld);
 
         const [displayWidth, displayHeight] = this._scaleDisplaySize();
         this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
@@ -140,29 +140,22 @@ export class Frame {
         return [positionX, positionY];
     }
 
-    _alignToAnchor(event, zoomRatioOld) {
-        const [focalShiftX, focalShiftY] = this._calculateFocalPointShift(event, zoomRatioOld);
+    _alignToZoomAnchor(event, zoomRatioOld) {
+        const containerRect = this._domElement.getBoundingClientRect();
+        const [focalImageX, focalImageY] = this._eventFocalToImagePosition(event, containerRect);
+        const zoomChangeAbsolute = this._zoomRatio - zoomRatioOld;
+
+        // To get how many px the focal point has shifted.
+        const focalShiftX = (focalImageX / zoomRatioOld) * zoomChangeAbsolute;
+        const focalShiftY = (focalImageY / zoomRatioOld) * zoomChangeAbsolute;
 
         this._positionX = clamp(this._positionX - focalShiftX, this._positionMinX, 0);
         this._positionY = clamp(this._positionY - focalShiftY, this._positionMinY, 0);
         this._domElement.style.backgroundPosition = `${this._positionX}px ${this._positionY}px`;
     }
 
-    _calculateFocalPointShift(event, zoomRatioOld) {
-        const { clientX, clientY } = event;
-        const containerRect = this._domElement.getBoundingClientRect();
-
-        const focalContainerX = clientX - containerRect.left;
-        const focalImageX = focalContainerX - this._positionX;
-        const focalImageXProportion = focalImageX / (this._imgProps.width * zoomRatioOld);
-        const sizeChangeX = this._imgProps.width * (this._zoomRatio - zoomRatioOld);
-
-        const focalContainerY = clientY - containerRect.top;
-        const focalImageY = focalContainerY - this._positionY;
-        const focalImageYProportion = focalImageY / (this._imgProps.height * zoomRatioOld);
-        const sizeChangeY = this._imgProps.height * (this._zoomRatio - zoomRatioOld);
-
-        return [sizeChangeX * focalImageXProportion, sizeChangeY * focalImageYProportion];
+    _eventFocalToImagePosition(event, containerRect) {
+        return [event.clientX - containerRect.left - this._positionX, event.clientY - containerRect.top - this._positionY];
     }
 
     _setImgProps(imgProps) {
@@ -223,8 +216,8 @@ export class Frame {
     // re-renders the UI, called after layout changed or window resized
     render() {
         this._setDefaultZoom();
-        this._setDefaultPosition();
         this._setPositionBoundary();
+        this._setDefaultPosition();
         this.setBackground(this._imgProps.backgroundImage);
     }
 
