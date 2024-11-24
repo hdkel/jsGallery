@@ -93,13 +93,14 @@ export class Frame {
 
         let zoomRatio = this._zoomRatio || 1;
         const zoomRatioOld = zoomRatio;
-        const step = (this._zoomRatioMax - this._zoomRatioMin) / 32;
+        const step = (this._zoomRatioMax - this._zoomRatioMin) / 16;
         if (event.deltaY > 0) {
             zoomRatio += step;
         } else {
             zoomRatio -= step;
         }
         this._zoomRatio = clamp(zoomRatio, this._zoomRatioMin, this._zoomRatioMax);
+        this._imgProps.preferredZoomRatio = this._zoomRatio;
 
         this._setPositionBoundary();
         this._alignToAnchor(event, zoomRatioOld);
@@ -111,7 +112,7 @@ export class Frame {
         this._isDragging = true;
         this._dragStartX = event.clientX;
         this._dragStartY = event.clientY;
-        this._domElement.style.cursor = 'drag';
+        this._domElement.style.cursor = this._imgProps.backgroundImage ? 'grab' : 'default';
         document.addEventListener("mousemove", this._boundMouseMove);
         document.addEventListener("mouseup", this._boundMouseUp);
     }
@@ -170,21 +171,27 @@ export class Frame {
     }
 
     _setDefaultZoom() {
-        const imgAspectRatio = this._imgProps.aspectRatio;
-        const frameAspectRatio = this._domElement.offsetWidth / this._domElement.offsetHeight;
+        const properZoomRatio = this._calculateZoomRatioOfContainer([this._domElement.offsetWidth, this._domElement.offsetHeight]);
+        this._zoomRatioMin = properZoomRatio;
+        this._zoomRatioMax = Math.max(this._zoomRatioMin, this._calculateZoomRatioOfContainer([window.screen.width, window.screen.height]) * 2);
 
-        const frameWidth = this._domElement.offsetWidth;
-        const frameHeight = this._domElement.offsetHeight;
-        const imgWidth = this._imgProps.width;
-        const imgHeight = this._imgProps.height;
-
-        // image is wider ? fit y-axis : along x
-        this._zoomRatio = frameAspectRatio < imgAspectRatio ? frameHeight / imgHeight : frameWidth / imgWidth;
-        this._zoomRatioMin = this._zoomRatio;
-        this._zoomRatioMax = this._zoomRatioMin * 3;
+        this._zoomRatio = clamp(this._imgProps.preferredZoomRatio || properZoomRatio, this._zoomRatioMin, this._zoomRatioMax);
+        this._imgProps.preferredZoomRatio = this._zoomRatio;
 
         const [displayWidth, displayHeight] = this._scaleDisplaySize();
         this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
+    }
+
+    _calculateZoomRatioOfContainer(containerDimension) {
+        const [containerWidth, containerHeight] = containerDimension;
+        const imageWidth = this._imgProps.width;
+        const imageHeight = this._imgProps.height;
+
+        const containerAspectRatio = containerWidth / containerHeight;
+        const imgAspectRatio = imageWidth / imageHeight;
+
+        // image is wider ? fit y-axis : along x
+        return containerAspectRatio < imgAspectRatio ? containerHeight / imageHeight : containerWidth / imageWidth;
     }
 
     _setDefaultPosition() {
@@ -204,8 +211,8 @@ export class Frame {
     }
 
     _scaleDisplaySize() {
-        const displayWidth = (this._imgProps.width * this._zoomRatio);
-        const displayHeight = (this._imgProps.height * this._zoomRatio);
+        const displayWidth = Math.round(this._imgProps.width * this._zoomRatio);
+        const displayHeight = Math.round(this._imgProps.height * this._zoomRatio);
         return [displayWidth, displayHeight];
     }
 
