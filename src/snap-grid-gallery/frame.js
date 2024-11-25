@@ -73,7 +73,10 @@ export class Frame {
                             width: img.width,
                             height: img.height,
                             backgroundImage: result,
-                            preferredZoomRatio: null, // reset when new pic arrives
+                            // reset the ones below when new pic arrives
+                            preferredZoomRatio: null,
+                            preferredFocalX: null,
+                            preferredFocalY: null,
                         });
                         this._setDefaultZoom();
                         this._setPositionBoundary();
@@ -100,7 +103,10 @@ export class Frame {
             zoomRatio -= step;
         }
         this._zoomRatio = clamp(zoomRatio, this._zoomRatioMin, this._zoomRatioMax);
-        this._imgProps.preferredZoomRatio = this._zoomRatio;
+        this._setImgProps({
+            preferredZoomRatio: this._zoomRatio,
+            ...this._getContainerFocalToUnscaledImagePosition()
+        });
 
         this._setPositionBoundary();
         this._alignToZoomAnchor(event, zoomRatioOld);
@@ -127,6 +133,8 @@ export class Frame {
         const [positionX, positionY] = this._getDeltaInClamp(event);
         this._positionX = positionX;
         this._positionY = positionY;
+        this._setImgProps(this._getContainerFocalToUnscaledImagePosition());
+
         this._domElement.style.cursor = 'default';
         document.removeEventListener('mousemove', this._boundMouseMove);
         document.removeEventListener('mouseup', this._boundMouseUp);
@@ -142,7 +150,7 @@ export class Frame {
 
     _alignToZoomAnchor(event, zoomRatioOld) {
         const containerRect = this._domElement.getBoundingClientRect();
-        const [focalImageX, focalImageY] = this._eventFocalToImagePosition(event, containerRect);
+        const [focalImageX, focalImageY] = this._getZoomEventFocalToImagePosition(event, containerRect);
         const zoomChangeAbsolute = this._zoomRatio - zoomRatioOld;
 
         // To get how many px the focal point has shifted.
@@ -153,8 +161,7 @@ export class Frame {
         this._positionY = clamp(this._positionY - focalShiftY, this._positionMinY, 0);
         this._domElement.style.backgroundPosition = `${this._positionX}px ${this._positionY}px`;
     }
-
-    _eventFocalToImagePosition(event, containerRect) {
+    _getZoomEventFocalToImagePosition(event, containerRect) {
         return [event.clientX - containerRect.left - this._positionX, event.clientY - containerRect.top - this._positionY];
     }
 
@@ -169,7 +176,9 @@ export class Frame {
         this._zoomRatioMax = Math.max(this._zoomRatioMin, this._calculateZoomRatioOfContainer([window.screen.width, window.screen.height]) * 2);
 
         this._zoomRatio = clamp(this._imgProps.preferredZoomRatio || properZoomRatio, this._zoomRatioMin, this._zoomRatioMax);
-        this._imgProps.preferredZoomRatio = this._zoomRatio;
+        this._setImgProps({
+            preferredZoomRatio: this._zoomRatio,
+        });
 
         const [displayWidth, displayHeight] = this._scaleDisplaySize();
         this._domElement.style.backgroundSize = `${displayWidth}px ${displayHeight}px`;
@@ -188,13 +197,32 @@ export class Frame {
     }
 
     _setDefaultPosition() {
-        const [displayWidth, displayHeight] = this._scaleDisplaySize();
-        const horizontalExtra = displayWidth - this._domElement.offsetWidth;
-        const verticalExtra = displayHeight - this._domElement.offsetHeight;
-        this._positionX = (- horizontalExtra / 2);
-        this._positionY = (- verticalExtra / 2);
+        // Has preferred value
+        if (this._imgProps.preferredFocalX && this._imgProps.preferredFocalY) {
+            const diffX = this._domElement.offsetWidth / 2 - Math.round(this._imgProps.preferredFocalX * this._zoomRatio);
+            const diffY = this._domElement.offsetHeight / 2 - Math.round(this._imgProps.preferredFocalY * this._zoomRatio);
+            this._positionX = clamp(diffX , this._positionMinX, 0);
+            this._positionY = clamp(diffY , this._positionMinY, 0);
+        }
+        else {
+            const [displayWidth, displayHeight] = this._scaleDisplaySize();
+            const horizontalExtra = displayWidth - this._domElement.offsetWidth;
+            const verticalExtra = displayHeight - this._domElement.offsetHeight;
+            this._positionX = (- horizontalExtra / 2);
+            this._positionY = (- verticalExtra / 2);
+        }
 
+        this._setImgProps(this._getContainerFocalToUnscaledImagePosition());
         this._domElement.style.backgroundPosition = `${this._positionX}px ${this._positionY}px`;
+    }
+
+    _getContainerFocalToUnscaledImagePosition() {
+        const focalXScaled = this._domElement.offsetWidth / 2 - this._positionX;
+        const focalYScaled = this._domElement.offsetHeight / 2 - this._positionY;
+        return {
+            preferredFocalX: focalXScaled / this._zoomRatio,
+            preferredFocalY: focalYScaled / this._zoomRatio,
+        }
     }
 
     _setPositionBoundary() {
