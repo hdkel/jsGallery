@@ -1,12 +1,12 @@
 export class FrameMenu {
 
-	static mapIcon = {
-		'split-horizontal': '\uD83C\uDC39',
-		'split-vertical': '\uD83C\uDC6B',
-		'remove': '\u2179',
-		'reload': '\u27f3',
-	};
-	static commandToIcon = icon => FrameMenu.mapIcon[icon] || '?';
+	static mapSvgUrl = {
+		'split-horizontal': 'src/assets/icon-split-horizontal.svg',
+		'split-vertical': 'src/assets/icon-split-vertical.svg',
+		'remove': 'src/assets/icon-close.svg',
+		'reload': 'src/assets/icon-unload.svg',
+	}
+	static commandToSvgUrl = icon => FrameMenu.mapSvgUrl[icon] || null;
 
 	constructor(args) {
 		const { target, frame, canRemove } = args;
@@ -55,7 +55,7 @@ export class FrameMenu {
 
 	_createButton(command) {
 		const button = document.createElement('div');
-		button.textContent = FrameMenu.commandToIcon(command.icon);
+		button.style.backgroundImage = `url(${FrameMenu.commandToSvgUrl(command.icon)})`;
 		button.onclick = command.action;
 		button.classList.add('gMenuButton');
 		return button;

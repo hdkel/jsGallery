@@ -59,10 +59,13 @@ button {
 }
 .gMenuButton {
     cursor: pointer;
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
+    width: 48px;
+    height: 48px;
+    line-height: 48px;
     text-align: center;
+    background-size: 32px 32px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 .gMenuButton:hover {
     background-color: #fff;
