@@ -53,6 +53,7 @@ button {
     right: 0;
     left: 0;
     background-color: rgba(127, 127, 127, 0.5);
+    cursor: move;
 }
 .gFrame:hover>.gMenu2 {
     visibility: visible;
