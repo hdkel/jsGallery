@@ -58,6 +58,9 @@ button {
 .gFrame:hover>.gMenu2 {
     visibility: visible;
 }
+.gFrame:hover>.gMenu2.menuHidden {
+    visibility: hidden;
+}
 .gMenuButton {
     cursor: pointer;
     width: 48px;
@@ -70,6 +73,37 @@ button {
 }
 .gMenuButton:hover {
     background-color: #fff;
+}
+.gPlaceholder {
+    display: none;
+    border-radius: 5px;
+    background-color: #333;
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    border: solid 2px #eee;
+    opacity: 0.8;
+}
+.gPlaceholder-self {
+    display: block;
+}
+.gPlaceholder-top {
+    display: block;
+    bottom: 50%;
+}
+.gPlaceholder-bottom {
+    display: block;
+    top: 50%;
+}
+.gPlaceholder-left {
+    display: block;
+    right: 50%;
+}
+.gPlaceholder-right {
+    display: block;
+    left: 50%;
 }
 
 /**

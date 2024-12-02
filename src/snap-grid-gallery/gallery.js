@@ -27,8 +27,30 @@ export class Gallery {
         this._frameNodes[initNode.id] = initNode;
         this._layout = Frame.generateLayoutNode(initNode.id);
 
+        // Mid-step properties
+        this.dragFrameId = null;
+
         // Render
         this._render();
+        this._bindEventHandlers();
+    }
+
+    _bindEventHandlers() {
+        this._boundMouseMove = this._handleMouseMove.bind(this);
+        this._boundMouseUp = this._handleMouseUp.bind(this);
+        this._target.addEventListener("mouseup", this._boundMouseUp);
+    }
+    _handleMouseMove(event) {
+        const frameClass = event.target.class;
+        if (frameClass?.nodeType === 'frame') {
+            frameClass.handleSplitDrag(event);
+        }
+    }
+    _handleMouseUp() {
+        const frameClass = event.target.class;
+        if (frameClass?.nodeType === 'frame') {
+            frameClass.endSplitDrag();
+        }
     }
 
     getFramePropertyNodeById(id) {
@@ -162,5 +184,26 @@ export class Gallery {
         this._organizeLayout(this._layout);
         window.sg.layout = this._layout;
         this._render();
+    }
+
+    setDragFrameId(id = null) {
+        this.dragFrameId = id;
+        if (id) {
+            document.addEventListener('mousemove', this._boundMouseMove);
+        } else {
+            document.removeEventListener('mousemove', this._boundMouseMove);
+        }
+    }
+    setFrameSplit(id, direction) {
+        const splitSourceFrameId = this.dragFrameId;
+        const splitTargetFrameId = id;
+        const splitDirection = direction;
+        if (splitSourceFrameId === splitTargetFrameId) {
+            this.dragFrameId = null;
+            return;
+        }
+        else {
+            // todo how do split?
+        }
     }
 }

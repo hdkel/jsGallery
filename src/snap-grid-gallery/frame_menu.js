@@ -15,6 +15,8 @@ export class FrameMenu {
 
 		this._domElement = this._createDomElement(target);
 		this._appendButtons();
+		this._bindEventHandlers()
+		return this;
 	}
 
 	_createDomElement(target) {
@@ -24,6 +26,23 @@ export class FrameMenu {
 
 		target.append(menu);
 		return menu;
+	}
+
+	_bindEventHandlers() {
+		this._boundMouseUp = this._handleMouseUp.bind(this);
+		this._boundMouseDown = this._handleMouseDown.bind(this);
+
+		this._domElement.addEventListener("mouseup", this._boundMouseUp);
+		this._domElement.addEventListener("mousedown", this._boundMouseDown);
+	}
+
+	_handleMouseDown(event) {
+		this._frame.startSplitDrag();
+		event.stopPropagation();
+	}
+	_handleMouseUp(event) {
+		this._frame.endSplitDrag();
+		event.stopPropagation();
 	}
 
 	_appendButtons() {
@@ -59,5 +78,12 @@ export class FrameMenu {
 		button.onclick = command.action;
 		button.classList.add('gMenuButton');
 		return button;
+	}
+
+	conceal() {
+		this._domElement.classList.add('menuHidden');
+	}
+	reveal() {
+		this._domElement.classList.remove('menuHidden');
 	}
 }

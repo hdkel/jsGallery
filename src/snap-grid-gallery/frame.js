@@ -1,5 +1,5 @@
 import {FrameMenu} from "./frame_menu.js";
-import {clamp, explicitBool, hashCode} from "../utility.js";
+import {clamp, emptyDom, explicitBool, hashCode} from "../utility.js";
 
 export class Frame {
 
@@ -19,6 +19,7 @@ export class Frame {
         this._canRemove = explicitBool(canRemove, true);
 
         // Property node props.
+        this.nodeType = 'frame';
         this._propertyNode = this._gallery.getFramePropertyNodeById(this._layoutNode.id);
         this._id = this._propertyNode.id;
         this._color = this._propertyNode.bgColor;
@@ -36,9 +37,20 @@ export class Frame {
         dom.style.backgroundColor = this._color;
         dom.classList.add('gFrame');
 
-        new FrameMenu({ target: dom, frame: this, canRemove: this._canRemove });
+        this._menu = new FrameMenu({ target: dom, frame: this, canRemove: this._canRemove });
+        this._placeholder = this._makeSplitDragPlaceholder(dom);
+
         target.append(dom);
         return dom;
+    }
+
+    _makeSplitDragPlaceholder(domFrame) {
+        const placeholderDom = document.createElement('div');
+        placeholderDom.classList.add(`gPlaceholder`);
+        placeholderDom.style.pointerEvents = 'none';
+
+        domFrame.append(placeholderDom);
+        return placeholderDom;
     }
 
     _bindEventHandlers() {
@@ -47,12 +59,14 @@ export class Frame {
         this._boundMouseDown = this._handleMouseDown.bind(this);
         this._boundMouseMove = this._handleMouseMove.bind(this);
         this._boundMouseUp = this._handleMouseUp.bind(this);
+        this._boundMouseout = this._handleMouseOut.bind(this);
 
         this._domElement.addEventListener('dragenter', this._handleIgnore);
         this._domElement.addEventListener('dragover', this._handleIgnore);
         this._domElement.addEventListener("drop", this._boundDrop);
         this._domElement.addEventListener('wheel', this._boundWheel);
         this._domElement.addEventListener("mousedown", this._boundMouseDown);
+        this._domElement.addEventListener("mouseleave", this._boundMouseout);
     }
 
     _handleIgnore(event) {
@@ -255,6 +269,51 @@ export class Frame {
         }
     }
 
+    startSplitDrag() {
+        this._gallery.setDragFrameId(this._id);
+    }
+    handleSplitDrag(event) {
+        this._menu.conceal();
+
+        if (this._gallery.dragFrameId === this._id) {
+            this._placeholder.classList.add('gPlaceholder-self');
+            return;
+        }
+
+        const containerRect = this._domElement.getBoundingClientRect();
+        const dragPointX = event.clientX - containerRect.left;
+        const dragPointY = event.clientY - containerRect.top;
+
+        const normalizedLeft = dragPointX / this._domElement.offsetWidth;
+        const normalizedRight = 1 - normalizedLeft;
+        const normalizedTop = dragPointY / this._domElement.offsetHeight;
+        const normalizedBottom = 1 - normalizedTop;
+
+        const values = [normalizedTop, normalizedBottom, normalizedLeft, normalizedRight];
+        const nearestSide = ["top", "bottom", "left", "right"][values.indexOf(Math.min(...values))];
+
+        this._splitDirection = nearestSide;
+        this._removePlaceholders();
+        this._placeholder.classList.add(`gPlaceholder-${nearestSide}`);
+        this._domElement.append(this._placeholder);
+    }
+    endSplitDrag() {
+        this._removePlaceholders();
+        this._menu.reveal();
+        this._gallery.setFrameSplit(this._id, this._splitDirection);
+    }
+
+    _removePlaceholders() {
+        this._placeholder.classList.remove("gPlaceholder-top");
+        this._placeholder.classList.remove("gPlaceholder-bottom");
+        this._placeholder.classList.remove("gPlaceholder-left");
+        this._placeholder.classList.remove("gPlaceholder-right");
+        this._placeholder.classList.remove("gPlaceholder-self");
+    }
+    _handleMouseOut() {
+        this._removePlaceholders();
+        this._menu.reveal();
+    }
     removeSelf() {
         this._domElement.removeEventListener("dragenter", this._handleIgnore);
         this._domElement.removeEventListener("dragover", this._handleIgnore);
