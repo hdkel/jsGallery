@@ -273,6 +273,12 @@ export class Frame {
         this._gallery.setDragFrameId(this._id);
     }
     handleSplitDrag(event) {
+
+        // TODO: maybe skip ALL logic if gallery is not in split mode??
+        if (!this._gallery.dragFrameId) {
+            return;
+        }
+
         this._menu.conceal();
 
         if (this._gallery.dragFrameId === this._id) {
