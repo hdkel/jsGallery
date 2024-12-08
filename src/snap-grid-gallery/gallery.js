@@ -148,7 +148,7 @@ export class Gallery {
     split(child, splitDirection) {
         let layoutElementParent = this._findParentContainerNodeByFrameId(this._layout, child.id);
         if (!layoutElementParent) {
-            layoutElementParent = Container.generateLayoutNode(splitDirection, [Frame.generateLayoutNode(child.id)]);
+            layoutElementParent = Container.generateLayoutNode(splitDirection, [child]);
             this._layout = layoutElementParent;
         }
 
@@ -194,16 +194,59 @@ export class Gallery {
             document.removeEventListener('mousemove', this._boundMouseMove);
         }
     }
+
     setFrameSplit(id, direction) {
         const splitSourceFrameId = this.dragFrameId;
         const splitTargetFrameId = id;
         const splitDirection = direction;
+
+        // Dropping on same frame, do nothing.
         if (splitSourceFrameId === splitTargetFrameId) {
             this.dragFrameId = null;
             return;
         }
         else {
-            // todo how do split?
+
+            // Find the parent - no need for null check because if there's only one frame, you won't be able to drop it on itself.
+            const targetLayoutElementParent = this._findParentContainerNodeByFrameId(this._layout, splitTargetFrameId);
+            const sourceLayoutElementParent = this._findParentContainerNodeByFrameId(this._layout, splitSourceFrameId);
+
+            // Gets layoutNodes for source and target frame from of each parents
+            const sourceFrameLayoutNode = sourceLayoutElementParent.nodes.find(layoutNode => layoutNode.id === splitSourceFrameId);
+            const targetFrameLayoutNode = targetLayoutElementParent.nodes.find(layoutNode => layoutNode.id === splitTargetFrameId);
+
+            // Remove source from its old parent
+            const indexToRemove = sourceLayoutElementParent.nodes.indexOf(sourceFrameLayoutNode);
+            sourceLayoutElementParent.nodes.splice(indexToRemove, 1);
+
+            // check split direction to decide child frame order
+            const isInsertBefore = ["left", "top"].includes(splitDirection);
+
+            // Split along same direction of target frame (vertical or horizontal, same logic)
+            if ((["left", "right"].includes(splitDirection) && targetLayoutElementParent.direction === "row") ||
+                (["top", "bottom"].includes(splitDirection) && targetLayoutElementParent.direction === "column")
+            ) {
+                // Append to new parent, which is the container for target frame
+                const indexToInsert = targetLayoutElementParent.nodes.indexOf(targetFrameLayoutNode);
+                targetLayoutElementParent.nodes.splice(isInsertBefore ? indexToInsert : indexToInsert + 1, 0, sourceFrameLayoutNode);
+            }
+
+            // When split directions are different
+            else {
+
+                // Prepares a new container
+                const newContainerDirection = Container.getOtherDirection(targetLayoutElementParent.direction);
+                const newChildNodes = isInsertBefore ? [sourceFrameLayoutNode, targetFrameLayoutNode] : [targetFrameLayoutNode, sourceFrameLayoutNode];
+
+                // Nest target frame into container, and put container into target's parent
+                const indexToInsert = targetLayoutElementParent.nodes.indexOf(targetFrameLayoutNode);
+                targetLayoutElementParent.nodes.splice(indexToInsert, 1, Container.generateLayoutNode(newContainerDirection, newChildNodes));
+            }
         }
+
+        this.dragFrameId = null;
+        this._organizeLayout(this._layout);
+        window.sg.layout = this._layout;
+        this._render();
     }
 }

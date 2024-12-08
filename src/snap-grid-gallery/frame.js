@@ -274,18 +274,20 @@ export class Frame {
     }
     handleSplitDrag(event) {
 
-        // TODO: maybe skip ALL logic if gallery is not in split mode??
+        // No drag frameId, meaning gallery is not in drag-to-split mode
         if (!this._gallery.dragFrameId) {
             return;
         }
 
         this._menu.conceal();
 
+        // Dragging through self, applies full-size placeholder to indicate you can't split on self
         if (this._gallery.dragFrameId === this._id) {
             this._placeholder.classList.add('gPlaceholder-self');
             return;
         }
 
+        // Valid split case, do the math and apply placeholder accordingly.
         const containerRect = this._domElement.getBoundingClientRect();
         const dragPointX = event.clientX - containerRect.left;
         const dragPointY = event.clientY - containerRect.top;
@@ -298,7 +300,7 @@ export class Frame {
         const values = [normalizedTop, normalizedBottom, normalizedLeft, normalizedRight];
         const nearestSide = ["top", "bottom", "left", "right"][values.indexOf(Math.min(...values))];
 
-        this._splitDirection = nearestSide;
+        this._dragSplitDirection = nearestSide;
         this._removePlaceholders();
         this._placeholder.classList.add(`gPlaceholder-${nearestSide}`);
         this._domElement.append(this._placeholder);
@@ -306,7 +308,7 @@ export class Frame {
     endSplitDrag() {
         this._removePlaceholders();
         this._menu.reveal();
-        this._gallery.setFrameSplit(this._id, this._splitDirection);
+        this._gallery.setFrameSplit(this._id, this._dragSplitDirection);
     }
 
     _removePlaceholders() {
