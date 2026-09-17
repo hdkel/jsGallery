@@ -1,6 +1,8 @@
+import { Gallery as Gallery2 } from './absolute-grid-gallery/gallery.js';
 import { Gallery } from './snap-grid-gallery/gallery.js';
 import { PingPongBoard } from './ping-pong-board/board.js';
 import { RuneWordsFilter } from "./runes/rune-words-filter.js";
+import { WuwaTeams } from "./wuwa-teams/wuwa-teams.js";
 import { emptyDom } from "./utility.js";
 
 const populateAppMenu = () => {
@@ -8,8 +10,10 @@ const populateAppMenu = () => {
 	// makes buttons for each component
 	const appDom = document.getElementById('app');
 	populateAppMenuItem('Snap Grid Gallery', '/sg', Gallery, appDom);
+	populateAppMenuItem('Absolute Grid Gallery (WIP)', '/sg2', Gallery2, appDom);
 	populateAppMenuItem('Ping Pong Board', '/board', PingPongBoard, appDom);
 	populateAppMenuItem('Rune Words Filter', '/rws', RuneWordsFilter, appDom);
+	populateAppMenuItem('Wuwa Teams', '/wuwa', WuwaTeams, appDom);
 }
 
 const populateAppMenuItem = (text, route, component, target) => {
@@ -30,6 +34,8 @@ const router = {
 	'/board': PingPongBoard,
 	'/sg': Gallery,
 	'/rws': RuneWordsFilter,
+	'/sg2': Gallery2,
+	'/wuwa': WuwaTeams
 }
 
 const populateDom = (path, target) => {

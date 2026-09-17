@@ -1,0 +1,56 @@
+[
+  {
+    "comp": [
+      "galbrena",
+      "qiuyuan",
+      "sk"
+    ],
+    "calc": [
+      {
+        "damage": 1898440,
+        "build": {
+          "galbrena": {
+            "rc": 0,
+            "sig": 1
+          },
+          "qiuyuan": {
+            "rc": 0,
+            "sig": 1
+          },
+          "sk": {
+            "rc": 0,
+            "sig": 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "comp": [
+      "galbrena",
+      "mortefi",
+      "sk"
+    ],
+    "calc": [
+      {
+        "damage": 1393191,
+        "build": {
+          "galbrena": {
+            "rc": 0,
+            "sig": 1
+          },
+          "mortefi": {
+            "rc": 6,
+            "sig": 0,
+            "weapon": "Static Mist",
+            "echo": "MC"
+          },
+          "sk": {
+            "rc": 0,
+            "sig": 1
+          }
+        }
+      }
+    ]
+  }
+]

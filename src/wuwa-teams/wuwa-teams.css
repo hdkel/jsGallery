@@ -1,0 +1,288 @@
+.wt-root {
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	height: 100%;
+	font-family: 'Anuphan', sans-serif;
+	background-color: #2b2b2b;
+}
+
+.wt-left {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	width: 650px;
+	height: 100%;
+	border-right: 1px solid #555;
+}
+
+.wt-filters {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px;
+	border-bottom: 1px solid #555;
+}
+
+.wt-filter-row {
+	display: flex;
+	align-items: center;
+	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid #555;
+}
+
+.wt-filter-btn {
+	height: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #3a3a3a;
+	border: none;
+	border-right: 1px solid #555;
+	border-radius: 0;
+	padding: 6px 10px;
+	cursor: pointer;
+}
+
+.wt-filter-row .wt-filter-btn:last-child {
+	border-right: none;
+}
+
+.wt-filter-btn img {
+	display: block;
+	width: 22px;
+	height: 22px;
+}
+
+.wt-rarity-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 22px;
+	font-size: 11px;
+	font-weight: bold;
+}
+
+.wt-rarity-icon.wt-rarity-5 {
+	color: #a6822e;
+}
+
+.wt-rarity-icon.wt-rarity-4 {
+	color: #6d2b9b;
+}
+
+.wt-filter-btn.wt-active {
+	background: #2d9cdb;
+}
+
+.wt-filter-btn.wt-active .wt-rarity-icon {
+	color: #fff;
+}
+
+.wt-character-list {
+	display: grid;
+	grid-template-columns: repeat(4, 150px);
+	gap: 10px;
+	padding: 10px;
+	overflow-y: auto;
+	align-content: start;
+	flex: 1;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.wt-character-list::-webkit-scrollbar {
+	display: none;
+}
+
+.wt-card {
+	position: relative;
+	width: 150px;
+	height: 202px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+.wt-card.wt-selected::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	padding: 3px;
+	border-radius: 6px;
+	background: linear-gradient(135deg, #0deb16, #0debae);
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.wt-card-inner {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.wt-card-inner.wt-rarity-5 {
+	background: linear-gradient(160deg, #f5d78e 0%, #c9a24b 35%, #8a651f 75%, #5e4315 100%);
+}
+
+.wt-card-inner.wt-rarity-4 {
+	background-color: #6d2b9b;
+}
+
+.wt-avatar {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: blur(0.4px);
+}
+
+.wt-top-badges {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	display: flex;
+	gap: 2px;
+}
+
+.wt-top-badges img {
+	width: 26px;
+	height: 26px;
+	background-color: #333;
+	border-radius: 50%;
+	padding: 3px;
+	box-sizing: border-box;
+}
+
+.wt-setup-badge {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	background: rgba(0, 0, 0, 0.65);
+	color: #fff;
+	font-size: 15px;
+	font-weight: bold;
+	padding: 2px 6px;
+	border-radius: 4px;
+}
+
+.wt-name {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	color: #fff;
+	font-size: 14px;
+	padding: 0 2px;
+	background: rgba(0, 0, 0, 0.7);
+}
+
+.wt-card-inner.wt-unowned {
+	filter: grayscale(0.9);
+}
+
+.wt-card-inner.wt-unowned .wt-avatar,
+.wt-card-inner.wt-unowned .wt-top-badges img {
+	opacity: 0.65;
+}
+
+.wt-right {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	height: 100%;
+}
+
+.wt-slots-bar {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 16px;
+	padding: 10px;
+	background: #3a3a3a;
+	border-bottom: 1px solid #555;
+}
+
+.wt-slots {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	flex: 1;
+}
+
+.wt-slots-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 0 0 auto;
+}
+
+.wt-action-btn {
+	cursor: pointer;
+}
+
+.wt-slot {
+	position: relative;
+	flex: 1;
+	aspect-ratio: 110 / 148;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.wt-slot-empty {
+	outline: 2px dashed #999;
+	outline-offset: -2px;
+}
+
+.wt-slot.wt-rarity-5 {
+	background: linear-gradient(160deg, #f5d78e 0%, #c9a24b 35%, #8a651f 75%, #5e4315 100%);
+}
+
+.wt-slot.wt-rarity-4 {
+	background-color: #6d2b9b;
+}
+
+.wt-slot-filled {
+	cursor: pointer;
+}
+
+.wt-slot-avatar {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: blur(0.4px);
+}
+
+.wt-slot-name {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	color: #fff;
+	font-size: 16px;
+	background: rgba(0, 0, 0, 0.7);
+}
+
+.wt-comp-results {
+	flex: 1;
+	padding: 10px;
+}
