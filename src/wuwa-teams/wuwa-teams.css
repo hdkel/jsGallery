@@ -1,4 +1,5 @@
 .wt-root {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: row;
 	width: 100%;
@@ -244,6 +245,7 @@
 }
 
 .wt-slot-empty {
+	box-sizing: border-box;
 	outline: 2px dashed #999;
 	outline-offset: -2px;
 }
@@ -285,4 +287,103 @@
 .wt-comp-results {
 	flex: 1;
 	padding: 10px;
+}
+
+/* Team Comp Results Table */
+.wt-results-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.wt-results-table th,
+.wt-results-table td {
+	padding: 8px 6px;
+	border-bottom: 1px solid #555;
+	text-align: center;
+}
+
+.wt-results-table th {
+	background-color: #3a3a3a;
+	color: #fff;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.wt-results-table td {
+	color: #e0e0e0;
+}
+
+.wt-result-row:hover {
+	background-color: #454545;
+}
+
+.wt-damage {
+	font-weight: bold;
+	color: #ff6b6b;
+	min-width: 120px;
+}
+
+.wt-build-desc {
+	max-width: 300px;
+	font-size: 13px;
+	line-height: 1.4;
+	word-break: break-all;
+	white-space: pre-wrap;
+}
+
+/* Team Comp Results Placeholder / Info */
+.wt-results-placeholder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	text-align: center;
+	color: #888;
+}
+
+.wt-results-placeholder h3 {
+	margin: 0 0 10px 0;
+	font-size: 18px;
+	color: #aaa;
+}
+
+.wt-results-placeholder p {
+	margin: 0 0 15px 0;
+	max-width: 400px;
+	line-height: 1.6;
+}
+
+.wt-comp-results-info {
+	box-sizing: border-box;
+	background-color: rgba(50, 50, 50, 0.3);
+	border: 2px dashed #555;
+	border-radius: 8px;
+	padding: 30px;
+}
+
+/* Similar Comps button */
+.wt-similar-comps {
+	margin-top: 15px;
+}
+
+/* Action Buttons */
+.wt-action-btn {
+	cursor: pointer;
+	background-color: #2d9cdb;
+	border: none;
+	border-radius: 4px;
+	color: #fff;
+	font-size: 14px;
+	padding: 8px 16px;
+	transition: background-color 0.2s;
+}
+
+.wt-action-btn:hover {
+	background-color: #1a8ac9;
+}
+
+.wt-action-btn:active {
+	background-color: #0e7bb5;
 }

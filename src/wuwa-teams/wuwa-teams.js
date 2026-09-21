@@ -1,3 +1,4 @@
+import { TeamCompLookupManager } from './lookup-manager.js';
 import { emptyDom } from '../utility.js';
 
 const ASSET_BASE = 'src/assets/wuwa';
@@ -60,7 +61,16 @@ export class WuwaTeams {
 
 		this._characters = [...characters].sort((a, b) => a.name.localeCompare(b.name));
 		this._owned = new Map(owned.map((o) => [o.id, o]));
-		this._renderList();
+
+		// Initialize team comp lookup manager
+		const compDataUrl = new URL('./data/team-comps.json', import.meta.url);
+		fetch(compDataUrl).then((r) => r.json()).then((comps) => {
+			this._compLookup = new TeamCompLookupManager();
+			this._compLookup.initialize(comps);
+			console.log(`[WuWaTeams] Loaded ${comps.length} team compositions`);
+			this._renderList();
+			this._renderResults();
+		});
 	}
 
 	_renderSlotsBar() {
@@ -82,11 +92,6 @@ export class WuwaTeams {
 		const clearBtn = document.createElement('button');
 		clearBtn.classList.add('wt-action-btn');
 		clearBtn.innerText = 'Clear';
-		clearBtn.onclick = () => {
-			this._selectedIds = new Array(TEAM_SIZE).fill(null);
-			this._renderSlots();
-			this._renderList();
-		};
 		actions.append(clearBtn);
 
 		bar.append(actions);
@@ -127,7 +132,6 @@ export class WuwaTeams {
 		this._leftEl.append(filters);
 	}
 
-	// Creates one filter group (single-select, click active again to clear)
 	_createFilterRow(values, onSelect, getSelected, renderContent) {
 		const row = document.createElement('div');
 		row.classList.add('wt-filter-row');
@@ -175,8 +179,28 @@ export class WuwaTeams {
 			return;
 		}
 		this._selectedIds[emptyIndex] = id;
+
+		// Log character selection for debugging
+		const character = this._characters.find(c => c.id === id);
+		console.log(`[WuWaTeams] Character selected: ${character?.name || 'unknown'} (id: ${id})`);
+
+		// Query comps containing this character for troubleshooting
+		if (this._compLookup) {
+			const compsWithChar = this._compLookup.findCompsByCharacter(character.id);
+			console.log(`[WuWaTeams] Character "${character.name}" (${character.id}) appears in ${compsWithChar.length} team compositions`);
+
+			// Additional: Check if exact match exists for debugging
+			const remainingSlots = 2 - this._selectedIds.filter(i => i !== null && i !== id).length;
+			if (remainingSlots < TEAM_SIZE) {
+				console.log(`[WuWaTeams] Partial selection (${this._selectedIds.filter(i => i).length}/${TEAM_SIZE}) - showing partial match preview`);
+			}
+		}
+
 		this._renderSlots();
 		this._renderList();
+
+		// Render results showing comps containing ANY selected character
+		this._renderResults();
 	}
 
 	_deselectCharacter(id) {
@@ -186,6 +210,15 @@ export class WuwaTeams {
 		}
 		this._renderSlots();
 		this._renderList();
+
+		// Log results when deselecting
+		const strings = JSON.stringify(this._selectedIds.map(id => {
+			const char = this._characters.find(c => c.id === id);
+			return char ? `${char.name} (S${id})` : null;
+		}));
+
+		console.log(`[WuWaTeams] Selection changed. Selected IDs: ${strings}`);
+		this._renderResults();
 	}
 
 	_renderSlots() {
@@ -273,5 +306,318 @@ export class WuwaTeams {
 		inner.append(name);
 
 		return card;
+	}
+
+	/**
+	 * Render team comp results as characters are selected
+	 * Shows all comps containing ANY selected character (partial match)
+	 * Only shows exact match when all 3 slots are filled
+	 */
+	_renderResults() {
+		const selectedCharIds = this._selectedIds.filter(id => id !== null);
+
+		if (selectedCharIds.length === 0) {
+			// No characters selected - show info about how to use
+			console.log(`[WuWaTeams] Select characters from left panel`);
+			this._renderResultsPlaceholder({
+				showInfo: false,
+				selectedCharIds: []
+			});
+			return;
+		}
+
+		const selectedCharNames = selectedCharIds.map(id => this._characters.find(c => c.id === id)?.name).filter(Boolean);
+
+		if (selectedCharIds.length < TEAM_SIZE) {
+			// 1-2 characters selected - show ALL comps containing ANY of them (partial match)
+			console.log(`[WuWaTeams] Partial selection: ${selectedCharNames.join(', ')}`);
+			console.log(`[WuWaTeams] Showing partial matches for: ${JSON.stringify(selectedCharIds)}`);
+
+			// Get all comps containing any selected character
+			const partialMatches = this._compLookup.findAnyCharacter(selectedCharIds);
+			console.log(`[WuWaTeams] Found ${partialMatches.length} comps containing any selected character`);
+
+			if (partialMatches && partialMatches.length > 0) {
+				// Log first few results for debugging
+				if (partialMatches.length <= 5 || partialMatches[0]?.calc?.length === 0) {
+					console.log(`[WuWaTeams] Partial match comps:`, JSON.stringify(partialMatches.slice(0, 3), null, 2));
+				}
+				this._renderResultsTable(partialMatches, selectedCharIds, 'partial');
+			}
+			else {
+				// No matches found for any selected character
+				console.log(`[WuWaTeams] No comps found containing: ${selectedCharNames.join(', ')}`);
+				this._renderResultsPlaceholder({
+					showInfo: true,
+					selectedCharIds
+				});
+			}
+			return;
+		}
+
+		// All 3 slots filled - look up exact match comps efficiently
+		console.log(`[WuWaTeams] Rendering results for: ${selectedCharNames.join(', ')}`);
+		console.log(`[WuWaTeams] Looking up exact match with character IDs: ${JSON.stringify(selectedCharIds)}`);
+		const matchingComps = this._compLookup.findExactMatch(selectedCharIds);
+
+		if (matchingComps && matchingComps.length > 0) {
+			console.log(`[WuWaTeams] Found ${matchingComps.length} exact match${matchingComps.length > 1 ? 'es' : ''}`);
+			// Log first few results for debugging
+			if (matchingComps.length <= 5 || matchingComps[0]?.calc?.length === 0) {
+				console.log(`[WuWaTeams] Exact match comps:`, JSON.stringify(matchingComps.slice(0, 3), null, 2));
+			}
+			this._renderResultsTable(matchingComps, selectedCharIds, 'exact');
+		}
+		else {
+			// No exact match found - fall back to partial match or show placeholder
+			console.log(`[WuWaTeams] No exact match found for: ${selectedCharNames.join(', ')}`);
+			const partialMatches = this._compLookup.findAnyCharacter(selectedCharIds);
+			if (partialMatches && partialMatches.length > 0) {
+				console.log(`[WuWaTeams] Showing partial matches instead: ${partialMatches.length} comps`);
+				this._renderResultsTable(partialMatches, selectedCharIds, 'partial');
+			}
+			else {
+				this._renderResultsPlaceholder({
+					showInfo: true,
+					selectedCharIds
+				});
+			}
+		}
+	}
+
+	/**
+	 * Render placeholder when no exact matches found or not enough chars selected
+	 */
+_renderResultsPlaceholder(args) {
+		const container = document.createElement('div');
+		container.classList.add('wt-results-placeholder', 'wt-comp-results-info');
+
+		if (args?.showInfo === false) {
+			// Not enough characters selected - show character selection info
+			const availableChars = this._characters.map(c => c.name).slice(0, 5).join(', ');
+			container.innerHTML = `
+				<h3>Select 3 Characters</h3>
+				<p>Select all three team slots to see matching team compositions and damage calculations.</p>
+				<p>Available characters: ${availableChars}...</p>
+			`;
+		}
+		else if (args?.showInfo === true) {
+			// No matching comp found for this exact combination
+			const selectedCharIds = args?.selectedCharIds || [];
+			const selectedCharNames = selectedCharIds.map(id => {
+				const char = this._characters.find(c => c.id === id);
+				return char ? char.name : `Unknown_${id}`;
+			}).filter(Boolean);
+
+			container.innerHTML = `
+				<h3>No team comps found</h3>
+				<p>Character combination: ${selectedCharNames.join(', ')}</p>
+				<p>This exact combination isn't in our wiki database yet.</p>
+				<p>We currently have <strong>${this._compLookup.getTotalCount()}</strong>+ team compositions indexed.</p>
+			`;
+
+			// Add a "Find Similar Comps" button if partial match available
+			const partialMatches = this._findAnyMatchingComps(selectedCharIds);
+			if (partialMatches && partialMatches.length > 0) {
+				const btn = document.createElement('button');
+				btn.classList.add('wt-action-btn', 'wt-similar-comps');
+				btn.innerText = `Show ${partialMatches.length} Team Comp${partialMatches.length > 1 ? 's' : ''} (Contains Any)`;
+				btn.onclick = () => {
+					this._renderResultsTable(partialMatches, selectedCharIds, 'partial');
+				};
+
+				const tempDiv = container.firstElementChild;
+				container.appendChild(tempDiv);
+				container.appendChild(btn);
+			}
+		}
+
+		// Clear existing content and add new placeholder
+		emptyDom(this._compResultsEl);
+		this._compResultsEl.append(container);
+	}
+
+	/**
+	 * Find similar comps that share 2 out of 3 characters
+	 */
+	findSimilar(charIds, missingCharId) {
+		if (charIds.length !== 2) return [];
+
+		// Try all permutations of adding each possible character ID
+		const results = [];
+
+		// Get all character IDs for iteration
+		const allCharIds = this._characters.map(c => c.id);
+		const uniqueCharIds = [...new Set(allCharIds)];
+
+		for (const candidateCharId of uniqueCharIds) {
+			if (!charIds.includes(candidateCharId)) {
+				// Try this character ID + the 2 selected ones
+				const newCombo = [...charIds, candidateCharId].sort();
+				const key = newCombo.join(',');
+
+				if (this._compLookup._exactMatchIndex.has(key)) {
+					const compEntries = this._compLookup._exactMatchIndex.get(key);
+					// Filter out comps that include the missing character ID
+					const filtered = compEntries.filter(c => {
+						return !c.comp.includes(missingCharId);
+					});
+					results.push(...filtered);
+				}
+			}
+		}
+
+		return results.slice(0, 10); // Return top 10 similar comps
+	}
+
+	/**
+	 * Get all comps containing ANY selected character (for "Contains Any" view)
+	 */
+	_findAnyMatchingComps(charIds) {
+		console.log(`[WuWaTeams] Finding partial match for: ${charIds.join(', ')}`);
+		const results = this._compLookup.findAnyCharacter(charIds);
+		console.log(`[WuWaTeams] Found ${results.length} comps containing any selected character`);
+
+		if (results.length > 0) {
+			// Log first few results for debugging
+			if (results.length <= 5 || results[0]?.calc?.length === 0) {
+				console.log(`[WuWaTeams] Partial match comps:`, JSON.stringify(results.slice(0, 3), null, 2));
+			}
+		}
+
+		return results;
+	}
+
+	/**
+	 * Render results table for team comps - supports exact match and partial match modes
+	 */
+	_renderResultsTable(comps, charIds, mode = 'exact') {
+		// Clear existing results
+		emptyDom(this._compResultsEl);
+
+		const displayMode = mode === 'partial' ? '(Contains Any)' : '';
+		console.log(`[WuWaTeams] Rendering ${comps.length} comp${comps.length > 1 ? 's' : ''}${displayMode}`);
+
+		// For partial match, we need to show which characters from the selection are in each comp
+		const selectedCharNames = charIds.map(id => this._characters.find(c => c.id === id)?.name).filter(Boolean);
+
+		// Create table header
+		const table = document.createElement('table');
+		table.classList.add('wt-results-table');
+
+		const thead = document.createElement('thead');
+		const headerRow = document.createElement('tr');
+
+		// Character name columns (display names for UI)
+		const charNames = charIds.map(id => {
+			const char = this._characters.find(c => c.id === id);
+			return char ? char.name : `Unknown_${id}`;
+		});
+
+		charNames.forEach((name, index) => {
+			const th = document.createElement('th');
+			// For partial match, show which characters from selection are in this comp
+			if (mode === 'partial') {
+				// Show character names with checkmarks for present chars
+				th.innerText = `${name}${selectedCharNames.includes(name) ? '\u2713' : ''}`;
+			} else {
+				th.innerText = `Slot ${index + 1}: ${name}`;
+			}
+			headerRow.append(th);
+		});
+
+		// Damage and build column
+		const damageTh = document.createElement('th');
+		damageTh.colSpan = charNames.length + 1;
+		damageTh.innerText = 'Damage';
+		headerRow.append(damageTh);
+
+		thead.append(headerRow);
+		table.append(thead);
+
+		// Table body - iterate through matching comps
+		const tbody = document.createElement('tbody');
+
+		for (const comp of comps) {
+			const row = document.createElement('tr');
+			row.classList.add('wt-result-row');
+
+			// Get max damage from this comp's calc array
+			let maxDamage = 0;
+
+			for (const calc of comp.calc) {
+				if (calc.damage > maxDamage) {
+					maxDamage = calc.damage;
+				}
+			}
+
+			// Build description string for exact match mode only
+			let buildString = [];
+
+			for (const calc of comp.calc) {
+				if (mode !== 'partial') {
+					// Build description string
+					const buildDesc = Object.entries(calc.build || {})
+					.map(([charId, stats]) => {
+						let desc = `${this._characters.find(c => c.id === charId)?.name?.toUpperCase() || charId.toUpperCase()}`;
+						if (stats.rc !== undefined && stats.rc >= 0) {
+							desc += ` R${stats.rc}`;
+						}
+						if (stats.sig !== undefined && stats.sig === 1) {
+							desc += 'S';
+						}
+						if (stats.weapon || stats.echo) {
+							desc += ` (${stats.weapon || stats.echo})`;
+						}
+						return desc;
+					})
+					.join(' + ');
+
+				buildString.push(buildDesc);
+			}
+
+			// For partial match mode, rebuild description with only selected characters
+			let primaryBuild;
+			if (mode === 'partial') {
+				const charNames = selectedCharNames.map(n => this._characters.find(c => c.name === n)?.id);
+
+				// Rebuild the description with only selected characters
+				const filteredBuildDesc = Object.entries(comp.calc[0]?.build || {})
+					.filter(([charId]) => charNames?.includes(charId))
+					.map(([charId, stats]) => {
+						let desc = `${this._characters.find(c => c.id === charId)?.name?.toUpperCase() || charId.toUpperCase()}`;
+						if (stats.rc !== undefined && stats.rc >= 0) {
+							desc += ` R${stats.rc}`;
+						}
+						if (stats.sig !== undefined && stats.sig === 1) {
+							desc += 'S';
+						}
+						if (stats.weapon || stats.echo) {
+							desc += ` (${stats.weapon || stats.echo})`;
+						}
+						return desc;
+					})
+					.join(' + ');
+
+				// Display the filtered build
+				primaryBuild = filteredBuildDesc || '-';
+			} else {
+				// Display first/primary build or combine multiple builds
+				primaryBuild = buildString.join(', ');
+			}
+
+			row.innerHTML = `
+				<td class="wt-damage">${maxDamage.toLocaleString()}</td>
+				<td colspan="charIds.length + 1" class="wt-build-desc">
+					${primaryBuild}
+				</td>
+			`;
+
+			tbody.append(row);
+		}
+
+			table.append(tbody);
+			this._compResultsEl.append(table);
+		}
 	}
 }
