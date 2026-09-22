@@ -50,6 +50,25 @@
             "sig": 1
           }
         }
+      },
+      {
+        "damage": 1393191,
+        "build": {
+          "galbrena": {
+            "rc": 0,
+            "sig": 1
+          },
+          "mortefi": {
+            "rc": 6,
+            "sig": 0,
+            "weapon": "Static Mist",
+            "echo": "MC"
+          },
+          "sk": {
+            "rc": 0,
+            "sig": 1
+          }
+        }
       }
     ]
   }
